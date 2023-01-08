@@ -1,0 +1,24 @@
+name: NUOPC Component Testing Action
+author: Ufuk Turuncoglu (ESMF/CGD/NCAR)
+description: Tests given earth system model component in a isolated way forced by data component
+inputs:
+  dependencies:
+    description: list of packages to install
+    required: false
+    default: ''
+
+runs:
+  steps:
+    # checkout base repository
+    - name: Checkout Component Repository
+      uses: actions/checkout@v3
+
+    # create environment with dependencies
+    - name: Install Dependencies 
+      id: install-deps
+      run: |
+        $GITHUB_ACTION_PATH/scrpits/install-deps.sh \
+        -d $(echo "${{ inputs.dependencies }}" | xargs) \
+        -i $HOME 
+        -r $GITHUB_WORKSPACE
+      shell: bash
