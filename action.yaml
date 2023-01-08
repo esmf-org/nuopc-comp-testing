@@ -20,7 +20,7 @@ runs:
       run: |
         ls -al $GITHUB_ACTION_PATH
         find $GITHUB_ACTION_PATH/. -name "*.sh"
-        $GITHUB_ACTION_PATH/scripts/install-deps.sh \
+        $GITHUB_ACTION_PATH/scripts/install_deps.sh \
         -d $(echo "${{ inputs.dependencies }}" | xargs) \
         -i $HOME 
         -r $GITHUB_WORKSPACE
