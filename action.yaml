@@ -18,6 +18,8 @@ runs:
     - name: Install Dependencies 
       id: install-deps
       run: |
+        ls -al $GITHUB_ACTION_PATH
+        find $GITHUB_ACTION_PATH/. -name "*.sh"
         $GITHUB_ACTION_PATH/scrpits/install-deps.sh \
         -d $(echo "${{ inputs.dependencies }}" | xargs) \
         -i $HOME 
