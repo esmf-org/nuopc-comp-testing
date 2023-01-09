@@ -7,6 +7,11 @@ inputs:
     required: false
     default: ''
 
+outputs:
+  version:
+    description: actual version installed
+    value: ${{ steps.install-deps.outputs.version }}
+
 runs:
   using: "composite"
   steps:
@@ -18,12 +23,9 @@ runs:
     - name: Install Dependencies 
       id: install-deps
       run: |
-        ls -al $GITHUB_ACTION_PATH
-        find $GITHUB_ACTION_PATH/. -name "*.sh"
-        echo "${{ inputs.dependencies }}"
-        echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=, 
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
         -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
         -i $HOME 
         -r $GITHUB_WORKSPACE
       shell: bash
+
