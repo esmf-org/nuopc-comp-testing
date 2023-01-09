@@ -24,8 +24,9 @@ runs:
       id: install-deps
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-        -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-        -i $HOME \ 
-        -r $GITHUB_WORKSPACE
+          -a x86_64_v4 \
+          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+          -i $HOME \
+          -r $GITHUB_WORKSPACE
       shell: bash
 
