@@ -71,7 +71,7 @@ echo "      compiler: [gcc@11.3.0]" >> spack.yaml
 echo "  view: $install_dir/view" >> spack.yaml
 echo "  config:" >> spack.yaml
 echo "    source_cache: $install_dir/source_cache" >> spack.yaml
-echo "    misc_cache: $install_dir/.spack-ci/misc_cache" >> spack.yaml
+echo "    misc_cache: $install_dir/misc_cache" >> spack.yaml
 echo "    test_cache: $install_dir/test_cache" >> spack.yaml
 echo "    install_tree:" >> spack.yaml
 echo "      root: $install_dir/opt" >> spack.yaml
@@ -89,7 +89,3 @@ echo "::group::Install Spack Packages"
 spack --color always -e $run_dir/. install -j3 --deprecated --no-checksum
 echo "::endgroup::"
 cat /home/runner/work/_temp/*.sh
-
-# return output
-#echo "::set-output name=version::spack-$arch-`"
-#spack-${{ steps.build-env.outputs.SPACK_ARCH }}-${{ hashFiles('**/spack.lock') }}

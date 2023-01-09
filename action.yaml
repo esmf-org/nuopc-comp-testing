@@ -2,10 +2,13 @@ name: NUOPC Component Testing Action
 author: Ufuk Turuncoglu (ESMF/CGD/NCAR)
 description: Tests given earth system model component in a isolated way forced by data component
 inputs:
+  architecture:
+    description: spack target architecture
+    required: false
+    default: x86_64_v4
   dependencies:
     description: list of packages to install
-    required: false
-    default: ''
+    required: true
 
 #outputs:
 #  version:
@@ -19,14 +22,26 @@ runs:
     - name: Checkout Component Repository
       uses: actions/checkout@v3
 
-    # create environment with dependencies
-    - name: Install Dependencies 
+    # restore build environment from cache
+    - name: Restore Dependencies Installed With Spack From Cache
+      id: cache-spack
+      uses: actions/cache@v3
+      with:
+        # NOTE: the following path needs to be consitent with the path defined in spack.yaml
+        path: $HOME/.spack-ci
+        key: spack-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+        restore-keys: |
+          spack-${{ inputs.architecture }}
+
+    # create build environment with dependencies
+    - name: Install Dependencies with Spack 
       id: install-deps
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-          -a x86_64_v4 \
+          -a ${{ inputs.architecture }} \
           -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-          -i $HOME \
+          -i $HOME/.spack-ci \
           -r $GITHUB_WORKSPACE
       shell: bash
+
 
