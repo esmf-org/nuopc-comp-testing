@@ -74,6 +74,7 @@ echo "    misc_cache: $install_dir/.spack-ci/misc_cache" >> spack.yaml
 echo "    test_cache: $install_dir/test_cache" >> spack.yaml
 echo "    install_tree:" >> spack.yaml
 echo "      root: $install_dir/opt" >> spack.yaml
+cat spack.yaml
 echo "::endgroup::"
 
 # concretize spack environment
