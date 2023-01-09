@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # get arguments
-while getopts d:i:r: flag
+while getopts d:i:r:a: flag
 do
     case "${flag}" in
         d) deps=${OPTARG};;
