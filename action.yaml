@@ -27,11 +27,10 @@ runs:
       id: cache-spack
       uses: actions/cache@v3
       with:
-        # NOTE: the following path needs to be consitent with the path defined in spack.yaml
         path: $HOME/.spack-ci
-        key: spack-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
         restore-keys: |
-          spack-${{ inputs.architecture }}
+          spack-${{ runner.os }}-${{ inputs.architecture }}
 
     # create build environment with dependencies
     - name: Install Dependencies with Spack 

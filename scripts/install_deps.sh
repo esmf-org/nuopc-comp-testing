@@ -88,4 +88,3 @@ echo "::endgroup::"
 echo "::group::Install Spack Packages"
 spack --color always -e $run_dir/. install -j3 --deprecated --no-checksum
 echo "::endgroup::"
-cat /home/runner/work/_temp/*.sh
