@@ -31,7 +31,7 @@ echo "Run Directory: $run_dir";
 cd $run_dir
 
 # checkout spack
-#git clone -b jcsda_emc_spack_stack https://github.com/NOAA-EMC/spack.git
+git clone -b jcsda_emc_spack_stack https://github.com/NOAA-EMC/spack.git
 
 # create spack.yaml
 echo "spack:" > spack.yaml
