@@ -7,10 +7,10 @@ inputs:
     required: false
     default: ''
 
-outputs:
-  version:
-    description: actual version installed
-    value: ${{ steps.install-deps.outputs.version }}
+#outputs:
+#  version:
+#    description: actual version installed
+#    value: ${{ steps.install-deps.outputs.version }}
 
 runs:
   using: "composite"
