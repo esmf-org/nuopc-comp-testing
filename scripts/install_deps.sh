@@ -3,12 +3,12 @@
 # get arguments
 while getopts a:d:i:r: flag
 do
-    case "${flag}" in
-        a) arch=${OPTARG};;
-        d) deps=${OPTARG};;
-        i) install_dir=${OPTARG};;
-        r) run_dir=${OPTARG};;
-    esac
+  case "${flag}" in
+    a) arch=${OPTARG};;
+    d) deps=${OPTARG};;
+    i) install_dir=${OPTARG};;
+    r) run_dir=${OPTARG};;
+  esac
 done
 
 # check for default values
@@ -88,6 +88,7 @@ echo "::endgroup::"
 echo "::group::Install Spack Packages"
 spack --color always -e $run_dir/. install -j3 --deprecated --no-checksum
 echo "::endgroup::"
+cat /home/runner/work/_temp/*.sh
 
 # return output
 #echo "::set-output name=version::spack-$arch-`"
