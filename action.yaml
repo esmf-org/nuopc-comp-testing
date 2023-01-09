@@ -29,8 +29,8 @@ runs:
       with:
         path: $HOME/.spack-ci
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
-        #restore-keys: |
-        #  spack-${{ runner.os }}-${{ inputs.architecture }}
+        restore-keys: |
+          spack-${{ runner.os }}-${{ inputs.architecture }}
 
     # create build environment with dependencies
     - name: Install Dependencies with Spack 
