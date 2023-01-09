@@ -15,10 +15,14 @@ if [ -z "$deps" ]; then
   echo "Dependencies are not given! Exiting ..."
   exit
 fi
-if [ -z "$install_dir" ]; then
+if [ ! -z `echo $deps | grep '^-'` ]; then
+  echo "argument -d is given but dependencies are not listed!"
+  exit
+fi
+if [[ -z "$install_dir" || ! -z `echo $install_dir | grep '^-'` ]]; then
   install_dir="$HOME/.spack-ci"
 fi
-if [ -z "$run_dir" ]; then
+if [[ -z "$run_dir" || ! -z `echo $run_dir | grep '^-'` ]]; then
   run_dir=`pwd`
 fi
 
@@ -31,7 +35,7 @@ echo "Run Directory: $run_dir";
 cd $run_dir
 
 # checkout spack
-git clone -b jcsda_emc_spack_stack https://github.com/NOAA-EMC/spack.git
+#git clone -b jcsda_emc_spack_stack https://github.com/NOAA-EMC/spack.git
 
 # create spack.yaml
 echo "spack:" > spack.yaml
