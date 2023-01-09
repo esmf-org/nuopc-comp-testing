@@ -22,8 +22,8 @@ runs:
         find $GITHUB_ACTION_PATH/. -name "*.sh"
         echo "${{ inputs.dependencies }}"
         echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=, 
-        #$GITHUB_ACTION_PATH/scripts/install_deps.sh \
-        #-d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-        #-i $HOME 
-        #-r $GITHUB_WORKSPACE
+        $GITHUB_ACTION_PATH/scripts/install_deps.sh \
+        -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+        -i $HOME 
+        -r $GITHUB_WORKSPACE
       shell: bash
