@@ -22,15 +22,15 @@ runs:
     - name: Checkout Component Repository
       uses: actions/checkout@v3
 
-    # restore build environment from cache
-    - name: Restore Dependencies Installed With Spack From Cache
-      id: cache-spack
-      uses: actions/cache@v3
-      with:
-        path: $HOME/.spack-ci
-        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
-        restore-keys: |
-          spack-${{ runner.os }}-${{ inputs.architecture }}
+#    # restore build environment from cache
+#    - name: Restore Dependencies Installed With Spack From Cache
+#      id: cache-spack
+#      uses: actions/cache@v3
+#      with:
+#        path: $HOME/.spack-ci
+#        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+#        restore-keys: |
+#          spack-${{ runner.os }}-${{ inputs.architecture }}
 
     # create build environment with dependencies
     - name: Install Dependencies with Spack 
@@ -43,4 +43,12 @@ runs:
           -r $GITHUB_WORKSPACE
       shell: bash
 
-
+    # restore build environment from cache
+    - name: Restore Dependencies Installed With Spack From Cache
+      id: cache-spack
+      uses: actions/cache@v3
+      with:
+        path: $HOME/.spack-ci
+        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+        restore-keys: |
+          spack-${{ runner.os }}-${{ inputs.architecture }}
