@@ -39,7 +39,7 @@ echo "  concretizer:" >> spack.yaml
 echo "    targets:" >> spack.yaml
 echo "      granularity: generic" >> spack.yaml
 echo "      host_compatible: false" >> spack.yaml
-echo "  unify: when_possible" >> spack.yaml
+echo "    unify: when_possible" >> spack.yaml
 echo "  specs:" >> spack.yaml
 IFS=', ' read -r -a array <<< "$deps"
 for d in "${array[@]}"
