@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # get arguments
-while getopts d:i:r:a: flag
+while getopts a:d:i:r: flag
 do
     case "${flag}" in
+        a) arch=${OPTARG};;
         d) deps=${OPTARG};;
         i) install_dir=${OPTARG};;
         r) run_dir=${OPTARG};;
-        a) arch=${OPTARG};;
     esac
 done
 
@@ -34,6 +34,7 @@ if [[ -z "$arch" || ! -z `echo $arch | grep '^-'` ]]; then
 fi
 
 # print out arguments
+echo "Target Architecture: $arch"
 echo "Dependencies: $deps";
 echo "Install Directory: $install_dir";
 echo "Run Directory: $run_dir";
