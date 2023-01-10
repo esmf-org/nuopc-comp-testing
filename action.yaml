@@ -16,7 +16,7 @@ inputs:
 #    value: ${{ steps.install-deps.outputs.version }}
 
 runs:
-  using: "composite"
+  #using: "composite"
   steps:
     # checkout base repository
     - name: Checkout Component Repository
@@ -42,3 +42,7 @@ runs:
           -i $HOME/.spack-ci \
           -r $GITHUB_WORKSPACE
       shell: bash
+
+branding:
+  icon: 'archive'
+  color: 'gray-dark'
