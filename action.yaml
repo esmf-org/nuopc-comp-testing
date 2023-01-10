@@ -17,11 +17,8 @@ inputs:
 
 runs:
   using: "composite"
-  main:
-    # checkout base repository
-    - name: Checkout Component Repository
-      uses: actions/checkout@v3
-
+  main: success()
+  post: success()
 
   #using: "composite"
   #steps:
