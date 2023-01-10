@@ -25,7 +25,7 @@ runs:
     # restore build environment from cache
     - name: Restore Dependencies Installed With Spack From Cache
       id: cache-spack
-      uses: actions/cache@v3
+      uses: actions/cache@v3.2.3
       with:
         path: $HOME/.spack-ci
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
