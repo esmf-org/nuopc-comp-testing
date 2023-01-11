@@ -17,35 +17,31 @@ inputs:
 
 runs:
   using: "composite"
-  main: success()
-  post: success()
+  steps:
+    # checkout base repository
+    - name: Checkout Component Repository
+      uses: actions/checkout@v3
 
-  #using: "composite"
-  #steps:
-  #  # checkout base repository
-  #  - name: Checkout Component Repository
-  #    uses: actions/checkout@v3
-#
-#    # restore build environment from cache
-#    - name: Restore Dependencies Installed With Spack From Cache
-#      id: cache-spack
-#      uses: actions/cache@v3.2.3
-#      with:
-#        path: $HOME/.spack-ci
-#        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
-#        restore-keys: |
-#          spack-${{ runner.os }}-${{ inputs.architecture }}
-#
-#    # create build environment with dependencies
-#    - name: Install Dependencies with Spack 
-#      id: install-deps
-#      run: |
-#        $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-#          -a ${{ inputs.architecture }} \
-#          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-#          -i $HOME/.spack-ci \
-#          -r $GITHUB_WORKSPACE
-#      shell: bash
+    # restore build environment from cache
+    - name: Restore Dependencies Installed With Spack From Cache
+      id: cache-spack
+      uses: actions/cache@v3.2.3
+      with:
+        path: $HOME/.spack-ci
+        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+        restore-keys: |
+          spack-${{ runner.os }}-${{ inputs.architecture }}
+
+    # create build environment with dependencies
+    - name: Install Dependencies with Spack 
+      id: install-deps
+      run: |
+        $GITHUB_ACTION_PATH/scripts/install_deps.sh \
+          -a ${{ inputs.architecture }} \
+          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+          -i $HOME/.spack-ci \
+          -r $GITHUB_WORKSPACE
+      shell: bash
 
 branding:
   icon: 'archive'
