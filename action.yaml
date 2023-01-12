@@ -12,7 +12,7 @@ inputs:
   install_dir:
     description: spack dependency installation directory 
     required: false
-    default: $HOME/.spack-ci
+    default: /home/runner/.spack-ci
 
 #outputs:
 #  version:
