@@ -45,12 +45,12 @@ runs:
     # restore dependencies from cache
     - name: Restore Dependencies
       id: restore-deps 
-      uses: actions/cache@v3.2.3
+      uses: actions/cache@v3
       with:
         path: ${{ inputs.install_dir }} 
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
         restore-keys: |
-          spack-${{ runner.os }}-${{ inputs.architecture }}
+          spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
 
     # install dependencies
     - name: Install Dependencies with Spack 
