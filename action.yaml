@@ -31,9 +31,20 @@ runs:
         sudo apt-get install wget awscli ca-certificates gh
       shell: bash
 
-    # restore build environment from cache
-    - name: Restore Dependencies Installed With Spack From Cache
-      id: cache-spack
+    # concretize dependencies
+    - name: Concretize Spack Environment Using YAML Specification
+      id: concretize-deps
+      run: |
+        $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
+          -a ${{ inputs.architecture }} \
+          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+          -i ${{ inputs.install_dir }} \
+          -r $GITHUB_WORKSPACE
+      shell: bash
+
+    # restore dependencies from cache
+    - name: Restore Dependencies
+      id: restore-deps 
       uses: actions/cache@v3.2.3
       with:
         path: ${{ inputs.install_dir }} 
@@ -41,14 +52,11 @@ runs:
         restore-keys: |
           spack-${{ runner.os }}-${{ inputs.architecture }}
 
-    # create build environment with dependencies
+    # install dependencies
     - name: Install Dependencies with Spack 
       id: install-deps
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-          -a ${{ inputs.architecture }} \
-          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-          -i ${{ inputs.install_dir }} \
           -r $GITHUB_WORKSPACE
       shell: bash
 
