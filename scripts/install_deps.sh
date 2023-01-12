@@ -21,5 +21,6 @@ cd $run_dir
 
 # install spack environment
 echo "::group::Install Spack Packages"
+. spack/share/spack/setup-env.sh
 spack --color always -e $run_dir/. install -j3 --deprecated --no-checksum
 echo "::endgroup::"
