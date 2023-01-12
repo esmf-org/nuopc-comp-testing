@@ -41,6 +41,9 @@ runs:
           -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
           -i $HOME/.spack-ci \
           -r $GITHUB_WORKSPACE
+        ls -al $HOME
+        ls -al $HOME/.spack-ci
+        ls -al $GITHUB_WORKSPACE 
       shell: bash
 
 branding:
