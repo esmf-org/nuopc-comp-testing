@@ -9,6 +9,10 @@ inputs:
   dependencies:
     description: list of packages to install
     required: true
+  install_dir:
+    description: spack dependency installation directory 
+    required: false
+    default: $HOME/.spack-ci
 
 #outputs:
 #  version:
@@ -27,7 +31,7 @@ runs:
       id: cache-spack
       uses: actions/cache@v3.2.3
       with:
-        path: $HOME/.spack-ci
+        path: ${{ inputs.install_dir }} 
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
         restore-keys: |
           spack-${{ runner.os }}-${{ inputs.architecture }}
@@ -39,11 +43,8 @@ runs:
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -a ${{ inputs.architecture }} \
           -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-          -i $HOME/.spack-ci \
+          -i ${{ inputs.install_dir }} \
           -r $GITHUB_WORKSPACE
-        ls -al $HOME
-        ls -al $HOME/.spack-ci
-        ls -al $GITHUB_WORKSPACE 
       shell: bash
 
 branding:
