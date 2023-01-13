@@ -13,6 +13,10 @@ inputs:
     description: spack dependency installation directory 
     required: false
     default: ~/.spack-ci
+  app_install_dir:
+    description: installation directory for apps such as components
+    required: false
+    default: ~/application
 
 runs:
   using: "composite"
@@ -65,23 +69,23 @@ runs:
       uses: actions/checkout@v3
       with:
         repository: uturuncoglu/CDEPS
-        path: ${{ github.workspace }}/cdeps
+        path: ${{ inputs.app_install_dir }}/cdeps
         ref: hotfix/std_build
 
     # build and install data models
     - name: Build and Install CDEPS
       run: |
-        export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
-        export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        export ESMFMKFILE=${{ inputs.dependencies_install_dir }}/view/lib/esmf.mk
         export FC=gfortran
-        cd ${{ github.workspace }}/cdeps
+        cd ${{ inputs.app_install_dir }}/cdeps
         mkdir build
         cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} \
-          -DPIO_C_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
-          -DPIO_C_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
-          -DPIO_Fortran_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
-          -DPIO_Fortran_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+        cmake -DCMAKE_INSTALL_PREFIX=${{ inputs.app_install_dir }} \
+          -DPIO_C_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
+          -DPIO_C_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
+          -DPIO_Fortran_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
+          -DPIO_Fortran_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
           -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
           -DDISABLE_FoX=ON ../
         make
