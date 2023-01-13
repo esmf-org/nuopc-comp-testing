@@ -9,7 +9,7 @@ inputs:
   dependencies:
     description: list of packages to install
     required: true
-  install_dir:
+  dependencies_install_dir:
     description: spack dependency installation directory 
     required: false
     default: ~/.spack-ci
@@ -38,7 +38,7 @@ runs:
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
           -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-          -i ${{ inputs.install_dir }} \
+          -i ${{ inputs.dependencies_install_dir }} \
           -r $GITHUB_WORKSPACE
       shell: bash
 
@@ -47,7 +47,7 @@ runs:
       id: restore-deps 
       uses: actions/cache@v3
       with:
-        path: ${{ inputs.install_dir }} 
+        path: ${{ inputs.dependencies_install_dir }} 
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
         restore-keys: |
           spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
@@ -59,7 +59,3 @@ runs:
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -r $GITHUB_WORKSPACE
       shell: bash
-
-branding:
-  icon: 'archive'
-  color: 'gray-dark'
