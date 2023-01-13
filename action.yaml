@@ -59,3 +59,31 @@ runs:
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -r $GITHUB_WORKSPACE
       shell: bash
+
+    # checkout data models
+    - name: Checkout CDEPS
+      uses: actions/checkout@v3
+      with:
+        repository: uturuncoglu/CDEPS
+        path: ${{ github.workspace }}/cdeps
+        ref: hotfix/std_build
+
+    # build and install data models
+    - name: Build and Install CDEPS
+      run: |
+        export PATH=${{ github.workspace }}/../.spack-ci/view/bin:$PATH
+        export ESMFMKFILE=${{ github.workspace }}/../.spack-ci/view/lib/esmf.mk
+        export FC=gfortran
+        cd ${{ github.workspace }}/cdeps
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_DIR }} \
+          -DPIO_C_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+          -DPIO_C_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+          -DPIO_Fortran_LIBRARY=${{ github.workspace }}/../.spack-ci/view/lib \
+          -DPIO_Fortran_INCLUDE_DIR=${{ github.workspace }}/../.spack-ci/view/include \
+          -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
+          -DDISABLE_FoX=ON ../
+        make
+        make install
+      shell: bash
