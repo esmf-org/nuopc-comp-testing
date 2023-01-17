@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # get arguments
-while getopts a:d:i:m: flag
+while getopts a:d:i:m:n: flag
 do
   case "${flag}" in
     a) app_install_dir=${OPTARG};; 
