@@ -17,12 +17,17 @@ inputs:
     description: installation directory for apps such as components
     required: false
     default: ${{ github.workspace }}/app
+  component_name:
+    description: component name
+    required: false
+    default: ${GITHUB_REPOSITORY#*/}
 
 runs:
   using: "composite"
   steps:
     # checkout base repository
     - name: Checkout Component Repository
+      path: ${{ inputs.app_install_dir }}/ ${{ inputs.component_name }}
       uses: actions/checkout@v3
 
     # prepare core environment
@@ -91,3 +96,10 @@ runs:
         make
         make install
       shell: bash
+
+    # checkout component that needs to be tested
+
+    # build component
+
+
+
