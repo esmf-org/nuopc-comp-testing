@@ -137,7 +137,7 @@ runs:
       id: cache-input
       uses: actions/cache@v3
       with:
-        path: ${{ inputs.app_install_dir }}run/INPUT
+        path: ${{ inputs.app_install_dir }}/run/INPUT
         key: input-${{ hashFiles('**/file_checksum.lock') }}
         restore-keys: |
             input
@@ -148,8 +148,8 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export PYTHONPATH=$HOME/.local:$PYTHONPATH
-        mkdir -p ${{ inputs.app_install_dir }}run/INPUT
-        cd ${{ inputs.app_install_dir }}run/INPUT
-        python3  $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+        mkdir -p ${{ inputs.app_install_dir }}/run/INPUT
+        cd ${{ inputs.app_install_dir }}/run/INPUT
+        #python3  $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
       shell: bash
 
