@@ -68,6 +68,7 @@ echo "    fort_module: cdeps_${data_comp}_comp" >> esmxBuild.yaml
 echo "  $model_comp:" >> esmxBuild.yaml
 echo "    cmake_config: $app_install_dir/lib/cmake/${model_comp}-esmx.cmake" >> esmxBuild.yaml
 echo "    fort_module: $model_module" >> esmxBuild.yaml
+cat esmxBuild.yaml
 
 # create build directory
 cmake -H$ESMF_ESMXDIR -Bbuild
