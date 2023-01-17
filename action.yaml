@@ -16,7 +16,7 @@ inputs:
   app_install_dir:
     description: installation directory for apps such as components
     required: false
-    default: ~/application
+    default: ${{ github.workspace }}/app
 
 runs:
   using: "composite"
