@@ -8,6 +8,7 @@ do
     d) data_comp=${OPTARG};;
     i) deps_install_dir=${OPTARG};;
     m) model_comp=${OPTARG};;
+    n) model_module=${OPTARG};;
   esac
 done
 
@@ -41,6 +42,16 @@ if [ ! -z `echo $model_comp | grep '^-'` ]; then
   exit
 fi
 
+if [ -z "$model_module" ]; then
+  echo "Name of model module is not given! Exiting ..."
+  exit
+fi
+
+if [ ! -z `echo $model_module | grep '^-'` ]; then
+  echo "argument -n is given but name of model module is not given!"
+  exit
+fi
+
 # set required environment variables
 export PATH=$deps_install_dir/view/bin:$PATH
 export ESMFMKFILE=$deps_install_dir/view/lib/esmf.mk
@@ -56,7 +67,7 @@ echo "    cmake_config: $app_install_dir/lib/cmake/${data_comp}-esmx.cmake" >> e
 echo "    fort_module: cdeps_${data_comp}_comp" >> esmxBuild.yaml
 echo "  $model_comp:" >> esmxBuild.yaml
 echo "    cmake_config: $app_install_dir/lib/cmake/${model_comp}-esmx.cmake" >> esmxBuild.yaml
-echo "    fort_module: lnd_comp_nuopc" >> esmxBuild.yaml
+echo "    fort_module: $model_module" >> esmxBuild.yaml
 
 # create build directory
 cmake -H$ESMF_ESMXDIR -Bbuild

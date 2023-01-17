@@ -2,21 +2,14 @@ name: NUOPC Component Testing Action
 author: Ufuk Turuncoglu (ESMF/CGD/NCAR)
 description: Tests given earth system model component in a isolated way forced by data component
 inputs:
-  architecture:
-    description: spack target architecture
-    required: false
-    default: x86_64_v4
-  dependencies:
-    description: list of packages to install
-    required: true
-  dependencies_install_dir:
-    description: spack dependency installation directory 
-    required: false
-    default: ~/.spack-ci
   app_install_dir:
     description: installation directory for apps such as components
     required: false
     default: ${{ github.workspace }}/app
+  architecture:
+    description: spack target architecture
+    required: false
+    default: x86_64_v4
   component_name:
     description: component name
     required: false
@@ -24,6 +17,20 @@ inputs:
   component_build:
     description: component build script
     required: true
+  component_module_name:
+    description: name of the component module
+    required: true
+  data_component_name:
+    description: data component name
+    required: false
+    default: datm
+  dependencies:
+    description: list of packages to install
+    required: true
+  dependencies_install_dir:
+    description: spack dependency installation directory
+    required: false
+    default: ~/.spack-ci
 
 runs:
   using: "composite"
@@ -115,7 +122,8 @@ runs:
       run: |
         $GITHUB_ACTION_PATH/scripts/create_exe.sh \
           -a ${{ inputs.app_install_dir }} \
-          -d datm \
+          -d ${{ inputs.data_component_name }} \
           -i ${{ inputs.dependencies_install_dir }} \
           -m ${{ inputs.component_name }}
+          -n ${{ inputs.component_module_name }}
       shell: bash
