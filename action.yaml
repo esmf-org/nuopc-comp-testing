@@ -27,8 +27,9 @@ runs:
   steps:
     # checkout base repository
     - name: Checkout Component Repository
-      path: ${{ inputs.app_install_dir }}/ ${{ inputs.component_name }}
       uses: actions/checkout@v3
+      with:
+        path: ${{ inputs.app_install_dir }}/ ${{ inputs.component_name }}
 
     # prepare core environment
     - name: Install Core Development Tools
