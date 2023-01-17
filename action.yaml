@@ -107,8 +107,9 @@ runs:
         echo 
       shell: bash
         cd ${{ inputs.app_install_dir }}
-        echo ${{ inputs.component_build }} >> install_comp.sh
-        chmod 755 install_comp.sh
-        ./install_comp.sh
+        echo "${{ inputs.component_build }}"
+        #>> install_comp.sh
+        #chmod 755 install_comp.sh
+        #./install_comp.sh
 
 
