@@ -150,6 +150,21 @@ runs:
         export PYTHONPATH=~/.local:$PYTHONPATH
         mkdir -p ${{ inputs.app_install_dir }}/run/INPUT
         cd ${{ inputs.app_install_dir }}/run/INPUT
-        python3  $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+        #python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
       shell: bash
+
+    # generate configuration files
+    - name: Generate Configuration Files
+      run: |
+        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+        #export INPUT_DIR='INPUT'
+        #export DATAMODE='CLMNCEP'
+        #export MODEL_MESHFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+        #export MODEL_MASKFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
+        #export NX_GLOBAL=144
+        #export NY_GLOBAL=96
+        cd ${{ inputs.app_install_dir }}/run
+        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
+        # get field dictionary from UFS weather model fork
+        #wget https://raw.githubusercontent.com/ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
 
