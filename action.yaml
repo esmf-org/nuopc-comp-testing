@@ -124,6 +124,6 @@ runs:
           -a ${{ inputs.app_install_dir }} \
           -d ${{ inputs.data_component_name }} \
           -i ${{ inputs.dependencies_install_dir }} \
-          -m ${{ inputs.component_name }}
+          -m ${{ inputs.component_name }} \
           -n ${{ inputs.component_module_name }}
       shell: bash
