@@ -31,6 +31,9 @@ inputs:
     description: spack dependency installation directory
     required: false
     default: ~/.spack-ci
+  test_definition:
+    description: YAML file that describes the test
+    required: true
 
 runs:
   using: "composite"
@@ -127,3 +130,24 @@ runs:
           -m ${{ inputs.component_name }} \
           -n ${{ inputs.component_module_name }}
       shell: bash
+
+    # restore input files from cache
+    - name: Restore Input Files From Cache
+      id: cache-input
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.app_install_dir }}run/INPUT
+        key: input-${{ hashFiles('**/file_checksum.lock') }}
+        restore-keys: |
+            input
+
+    # create run directory and download input
+    - name: Download Input Files
+      if: steps.cache-input.outputs.cache-hit != 'true'
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        mkdir -p ${{ inputs.app_install_dir }}run/INPUT
+        cd ${{ inputs.app_install_dir }}run/INPUT
+        python3  $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+      shell: bash
+
