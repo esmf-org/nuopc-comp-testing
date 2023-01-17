@@ -121,7 +121,7 @@ def s3_get(end_point, files, fhash, force_download):
 
         # try to get checksum from s3 bucket
         try:
-            print('end_point = {}'.format(end_point))
+            print('end_point = {} and file = {}'.format(end_point, f))
             md5sum_remote = s3.head_object(Bucket=end_point, Key=f)['ETag'][1:-1]
         except botocore.exceptions.ClientError:
             md5sum_remote = None
