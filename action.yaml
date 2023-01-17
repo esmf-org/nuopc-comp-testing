@@ -20,7 +20,7 @@ inputs:
   component_name:
     description: component name
     required: false
-    default: ${GITHUB_REPOSITORY#*/}
+    default: ${{ github.event.repository.name }}
 
 runs:
   using: "composite"
@@ -29,7 +29,7 @@ runs:
     - name: Checkout Component Repository
       uses: actions/checkout@v3
       with:
-        path: ${{ inputs.app_install_dir }}/ ${{ inputs.component_name }}
+        path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
 
     # prepare core environment
     - name: Install Core Development Tools
