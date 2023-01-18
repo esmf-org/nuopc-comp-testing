@@ -242,7 +242,7 @@ def main(argv):
                 _dict.pop(k1, None)
                 print('There is no input section for {} component. Skip it!'.format(k1))
         else:
-            sys.exit('File not found: {}'.format(input file))
+            sys.exit('File not found: {}'.format(input_file))
 
     # open file object to store list of files and their hashes
     fhash = open('file_checksum.lock', 'w')
