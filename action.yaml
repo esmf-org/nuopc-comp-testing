@@ -34,6 +34,10 @@ inputs:
   test_definition:
     description: YAML file that describes the test
     required: true
+  artifacts_retention_period:
+    description: custom retention period for individual artifacts
+    required: false
+    default: 2
 
 runs:
   using: "composite"
@@ -163,18 +167,18 @@ runs:
       shell: bash
 
     # run application
-    #- name: Run Application
-    #  run: |
-    #    export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-    #    cd ${{ inputs.app_install_dir }}/run
-    #    mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-    #    tar -czvf log_files.tar.gz PET* out_err.txt datm.log
-    #  shell: bash
+    - name: Run Application
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        cd ${{ inputs.app_install_dir }}/run
+        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+        tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+      shell: bash
 
     # upload model results to artifacts to check it later
-    #- name: Upload Output to Artifacts
-    #  uses: actions/upload-artifact@v3
-    #  with:
-    #    name: model output
-    #    path: /comp.test.lnd*.nc
-    #    retention-days: ${{ env.ARTIFACTS_RETENTION_PERIOD }}
+    - name: Upload Output to Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: model output
+        path: /comp.test.lnd*.nc
+        retention-days: ${{ inputs.artifacts_retention_period }}
