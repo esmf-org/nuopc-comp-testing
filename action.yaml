@@ -157,6 +157,7 @@ runs:
     - name: Generate Configuration Files
       run: |
         export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+        export PYTHONPATH=$GITHUB_ACTION_PATH:$PYTHONPATH
         #export INPUT_DIR='INPUT'
         #export DATAMODE='CLMNCEP'
         #export MODEL_MESHFILE='INPUT/fv1.9x2.5_141008_ESMFmesh.nc'
