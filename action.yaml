@@ -148,8 +148,8 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export PYTHONPATH=~/.local:$PYTHONPATH
-        mkdir -p ${{ inputs.app_install_dir }}/run/INPUT
-        cd ${{ inputs.app_install_dir }}/run/INPUT
+        mkdir ${{ inputs.app_install_dir }}/run
+        cd ${{ inputs.app_install_dir }}/run
         python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
       shell: bash
 
