@@ -31,6 +31,22 @@ def recv_files(_dict, fhash, force_download):
         end_point = v1['input']['end_point']
         files = v1['input']['files']
 
+        # save current directory
+        current_dir = os.getcwd()
+
+        # check if target directory specified and change the directory to it
+        if 'target_directory' in v1['input']:
+            # set target directory
+            target_dir = os.path.join(current_dir, v1['input']['target_directory'])
+
+            # check directory
+            if not os.path.isdir(target_dir):
+                # create directory
+                os.mkdir(target_dir)
+
+            # change the current directory
+            os.chdir(target_dir)
+
         # call data retrieval routine for component
         print('downloading files using {} protocol ...'.format(protocol))
         if protocol == 'ftp':
@@ -43,6 +59,9 @@ def recv_files(_dict, fhash, force_download):
             s3_cli_get(end_point, files, fhash, force_download)
         else:
             sys.exit("unsupported protocol to download data: {}".format(protocol))
+
+        # back to the saved current directory
+        os.chdir(current_dir)
 
 def ftp_get(end_point, files, fhash, force_download):
     # loop over files
@@ -177,10 +196,15 @@ def main(argv):
     _dict = collections.OrderedDict(sorted(_dict['components'].items()))
 
     # remove driver from dictionary
-    _dict.pop('drv', None)
+    if not 'input' in _dict['drv']:
+        _dict.pop('drv', None)
 
     # loop over component YAML files and add it to dictionary
     for k1, v1 in _dict.items():
+        # skip if it is drv
+        if k1 == 'drv':
+            continue
+
         # read component YAML file
         if os.path.isabs(os.path.dirname(v1)): # absolute path is used
             _dict_comp = read_drv_yaml_file(v1)
