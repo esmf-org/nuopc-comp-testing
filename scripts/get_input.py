@@ -153,8 +153,13 @@ def s3_get(end_point, files, fhash, force_download):
         try:
             print('end_point = {} and file = {}'.format(end_point, f))
             md5sum_remote = s3.head_object(Bucket=end_point, Key=f)['ETag'][1:-1]
-        except botocore.exceptions.ClientError:
-            md5sum_remote = None
+        except botocore.exceptions.ClientError as e:
+            # skip file if the object does not exist
+            if e.response['Error']['Code'] == "404":
+                print('Skipping file since the object does not exist!')
+                continue
+            else:
+                md5sum_remote = None
 
         # try to get checksum from local file, if exists
         found = False
