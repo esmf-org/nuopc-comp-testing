@@ -144,7 +144,7 @@ runs:
 
     # create run directory and download input
     - name: Download Input Files
-      if: steps.cache-input.outputs.cache-hit != 'true'
+      #if: steps.cache-input.outputs.cache-hit != 'true'
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export PYTHONPATH=~/.local:$PYTHONPATH
