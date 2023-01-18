@@ -47,8 +47,11 @@ def recv_files(_dict, fhash, force_download):
 
         # check if target directory specified and change the directory to it
         if 'target_directory' in v1['input']:
-            # set target directory
-            target_dir = os.path.join(current_dir, v1['input']['target_directory'])
+            # check absolute or relative path
+            if os.path.isabs(os.path.dirname(v1['input']['target_directory'])): # absolute path is used
+                target_dir = v1['input']['target_directory']
+            else: # relative path is used
+                target_dir = os.path.join(current_dir, v1['input']['target_directory'])
 
             # check directory
             if not os.path.isdir(target_dir):
@@ -56,6 +59,7 @@ def recv_files(_dict, fhash, force_download):
                 os.mkdir(target_dir)
 
             # change the current directory
+            print('Going to {} directory to download files for {}.'.format(target_dir, k1))
             os.chdir(target_dir)
 
         # call data retrieval routine for component
