@@ -26,59 +26,62 @@ def read_drv_yaml_file(file_path):
 def recv_files(_dict, fhash, force_download):
     # loop through available components
     for k1, v1 in _dict.items():
-        # query protocol, end_point and also list of files
-        if 'protocol' in v1['input']:
-            protocol = v1['input']['protocol']
-        else:
-            sys.exit('No protocol is specified for {} component'.format(k1))
+        for k2, v2 in v1['input'].items():
+            # query protocol, end_point and also list of files
+            if 'protocol' in v2:
+                protocol = v2['protocol']
+            else:
+                sys.exit('No protocol is specified for component {} and section {}!'.format(k1, k2))
 
-        if 'end_point' in v1['input']:
-            end_point = v1['input']['end_point']
-        else:
-            sys.exit('No end_point is specified for {} component'.format(k1))
+            if 'end_point' in v2:
+                end_point = v2['end_point']
+            else:
+                sys.exit('No end_point is specified for component {} and section {}!'.format(k1, k2))
 
-        if 'files' in v1['input']:
-            files = v1['input']['files']
-        else:
-            sys.exit('Files are not listed for {} component'.format(k1))
+            if 'files' in v2:
+                files = v2['files']
+            else:
+                sys.exit('Files are not listed for component {} and section {}!'.format(k1, k2))
 
-        # save current directory
-        current_dir = os.getcwd()
+            # save current directory
+            current_dir = os.getcwd()
 
-        # check if target directory specified and change the directory to it
-        if 'target_directory' in v1['input']:
-            # check absolute or relative path
-            if os.path.isabs(os.path.dirname(v1['input']['target_directory'])): # absolute path is used
-                target_dir = v1['input']['target_directory']
-            else: # relative path is used
-                target_dir = os.path.join(current_dir, v1['input']['target_directory'])
+            # check if target directory specified and change the directory to it
+            target_dir = None
+            if 'target_directory' in v2:
+                # check given path is absolute or relative
+                if os.path.isabs(os.path.dirname(v2['target_directory'])):
+                    target_dir = v2['target_directory']
+                else:
+                    target_dir = os.path.join(current_dir, v2['target_directory'])
 
-            # check directory
-            if not os.path.isdir(target_dir):
-                # create directory
-                os.mkdir(target_dir)
+                # check directory
+                if not os.path.isdir(target_dir):
+                    # create directory
+                    os.mkdir(target_dir)
 
-            # change the current directory
-            print('Going to {} directory to download files for {}.'.format(target_dir, k1))
-            os.chdir(target_dir)
+                # change the current directory
+                os.chdir(target_dir)
+                print('Download files for component {} and section {} to {}.'.format(k1, k2, target_dir))
+            else:
+                print('Download files for component {} and section {} to {}.'.format(k1, k2, current_dir))
 
-        # call data retrieval routine for component
-        print('downloading files using {} protocol ...'.format(protocol))
-        if protocol == 'ftp':
-            ftp_get(end_point, files, fhash, force_download)
-        if protocol == 'wget':
-            cmd_get(end_point, files, fhash, force_download)
-        elif protocol == 's3':
-            s3_get(end_point, files, fhash, force_download)
-        elif protocol == 's3-cli':
-            s3_cli_get(end_point, files, fhash, force_download)
-        else:
-            sys.exit("unsupported protocol to download data: {}".format(protocol))
+            # call data retrieval routine for component
+            if protocol == 'ftp':
+                ftp_get(end_point, files, fhash, target_dir, force_download)
+            elif protocol == 'wget':
+                cmd_get(end_point, files, fhash, target_dir, force_download)
+            elif protocol == 's3':
+                s3_get(end_point, files, fhash, target_dir, force_download)
+            elif protocol == 's3-cli':
+                s3_cli_get(end_point, files, fhash, target_dir, force_download)
+            else:
+                sys.exit("Unsupported protocol given to download data: {}! Please set to ftp, wget, s3 or s3-cli.".format(protocol))
 
-        # back to the saved current directory
-        os.chdir(current_dir)
+            # back to the saved current directory
+            os.chdir(current_dir)
 
-def ftp_get(end_point, files, fhash, force_download):
+def ftp_get(end_point, files, fhash, target_dir, force_download):
     # loop over files
     for f in files:
         lfile = os.path.basename(f)
@@ -102,28 +105,36 @@ def ftp_get(end_point, files, fhash, force_download):
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
+        if target_dir:
+            lfile = os.path.join(target_dir, lfile)
         fhash.write('{}  {}\n'.format(md5sum_local, lfile))
 
-def cmd_get(end_point, files, fhash, force_download):
+def cmd_get(end_point, files, fhash, target_dir, force_download):
     # loop over files
     for f in files:
         lfile = os.path.basename(f)
 
+        # check file
+        download = True
+        if os.path.exists(lfile) and not force_download:
+            print('file \'{}\' is found. skip downloading'.format(lfile))
+            download = False
+
         # download file
-        if force_download:
-            cmd = 'wget --no-verbose --no-check-certificate {}:{}'.format(end_point, f)
-        else:
+        if download:
             cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
-        print("cmd is {}".format(cmd))
-        os.system(cmd)
+            print("cmd is {}".format(cmd))
+            os.system(cmd)
 
         # get hash of file
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
+        if target_dir:
+            lfile = os.path.join(target_dir, lfile)
         fhash.write('{}  {}\n'.format(md5sum_local, lfile))
 
-def s3_cli_get(end_point, files, fhash, force_download):
+def s3_cli_get(end_point, files, fhash, target_dir, force_download):
     # loop over files
     for f in files:
         lfile = os.path.basename(f)
@@ -143,9 +154,11 @@ def s3_cli_get(end_point, files, fhash, force_download):
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
 
         # write file name and checksum to file
+        if target_dir:
+            lfile = os.path.join(target_dir, lfile)
         fhash.write('{}  {}\n'.format(md5sum_local, lfile))    
 
-def s3_get(end_point, files, fhash, force_download):
+def s3_get(end_point, files, fhash, target_dir, force_download):
     # create an S3 access object, config option allows accessing anonymously
     s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
 
@@ -155,12 +168,11 @@ def s3_get(end_point, files, fhash, force_download):
 
         # try to get checksum from s3 bucket
         try:
-            print('end_point = {} and file = {}'.format(end_point, f))
             md5sum_remote = s3.head_object(Bucket=end_point, Key=f)['ETag'][1:-1]
         except botocore.exceptions.ClientError as e:
             # skip file if the object does not exist
             if e.response['Error']['Code'] == "404":
-                print('Skipping file since the object does not exist!')
+                print('Skipping {} since the object does not exist in {}!'.format(f, end_point))
                 continue
             else:
                 md5sum_remote = None
@@ -191,6 +203,8 @@ def s3_get(end_point, files, fhash, force_download):
             print('file \'{}\' is found. skip downloading'.format(lfile))
 
         # write file name and checksum to file
+        if target_dir:
+            lfile = os.path.join(target_dir, lfile)
         fhash.write('{}  {}\n'.format(md5sum_remote, lfile))
 
 def main(argv):

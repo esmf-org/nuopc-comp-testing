@@ -10,6 +10,10 @@ inputs:
     description: spack target architecture
     required: false
     default: x86_64_v4
+  artifacts_retention_period:
+    description: custom retention period for individual artifacts
+    required: false
+    default: 2
   component_name:
     description: component name
     required: false
@@ -34,10 +38,6 @@ inputs:
   test_definition:
     description: YAML file that describes the test
     required: true
-  artifacts_retention_period:
-    description: custom retention period for individual artifacts
-    required: false
-    default: 2
 
 runs:
   using: "composite"
