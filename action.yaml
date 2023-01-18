@@ -171,16 +171,22 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
-        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        cat PET*
+        ls -al .
         ls -al INPUT/
-        tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+        cat input.nml
+        cat datm_in
+        cat datm.streams
+        cat esmxRun.config
+        cat fd_nems.yaml
+        #mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+        #cat PET*
+        #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
       shell: bash
 
     # upload model results to artifacts to check it later
-    - name: Upload Output to Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: model output
-        path: /comp.test.lnd*.nc
-        retention-days: ${{ inputs.artifacts_retention_period }}
+    #- name: Upload Output to Artifacts
+    #  uses: actions/upload-artifact@v3
+    #  with:
+    #    name: model output
+    #    path: /comp.test.lnd*.nc
+    #    retention-days: ${{ inputs.artifacts_retention_period }}
