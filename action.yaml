@@ -172,6 +172,8 @@ runs:
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
         mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+        cat PET*
+        ls -al INPUT/
         tar -czvf log_files.tar.gz PET* out_err.txt datm.log
       shell: bash
 
