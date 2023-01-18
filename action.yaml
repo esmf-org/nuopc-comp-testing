@@ -152,7 +152,9 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export PYTHONPATH=~/.local:$PYTHONPATH
-        mkdir ${{ inputs.app_install_dir }}/run
+        if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
+          mkdir ${{ inputs.app_install_dir }}/run
+        fi
         cd ${{ inputs.app_install_dir }}/run
         python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
       shell: bash
