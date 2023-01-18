@@ -167,4 +167,5 @@ runs:
         python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
         # get field dictionary from UFS weather model fork
         #wget https://raw.githubusercontent.com/ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+      shell: bash
 
