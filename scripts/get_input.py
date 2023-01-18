@@ -27,9 +27,20 @@ def recv_files(_dict, fhash, force_download):
     # loop through available components
     for k1, v1 in _dict.items():
         # query protocol, end_point and also list of files
-        protocol = v1['input']['protocol']
-        end_point = v1['input']['end_point']
-        files = v1['input']['files']
+        if 'protocol' in v1['input']:
+            protocol = v1['input']['protocol']
+        else:
+            sys.exit('No protocol is specified for {} component'.format(k1))
+
+        if 'end_point' in v1['input']:
+            end_point = v1['input']['end_point']
+        else:
+            sys.exit('No end_point is specified for {} component'.format(k1))
+
+        if 'files' in v1['input']:
+            files = v1['input']['files']
+        else:
+            sys.exit('Files are not listed for {} component'.format(k1))
 
         # save current directory
         current_dir = os.getcwd()
@@ -199,20 +210,34 @@ def main(argv):
     if not 'input' in _dict['drv']:
         _dict.pop('drv', None)
 
+    # create copy of dictionary to loop over
+    _dict_copy = _dict.copy()
+
     # loop over component YAML files and add it to dictionary
-    for k1, v1 in _dict.items():
+    for k1, v1 in _dict_copy.items():
         # skip if it is drv
         if k1 == 'drv':
             continue
 
-        # read component YAML file
+        # set input file name
         if os.path.isabs(os.path.dirname(v1)): # absolute path is used
-            _dict_comp = read_drv_yaml_file(v1)
+            input_file = v1
         else: # relative path is used
-            _dict_comp = read_drv_yaml_file(os.path.join(os.path.dirname(ifile), v1))
+            input_file = os.path.join(os.path.dirname(ifile), v1)
 
-        # add component info
-        _dict[k1] = _dict_comp
+        # check file and add it if it is found
+        if os.path.isfile(input_file):
+            # read component YAML file and add it to dictionary
+            _dict_comp = read_drv_yaml_file(input_file)
+
+            # add component info
+            if 'input' in _dict_comp:
+                _dict[k1] = _dict_comp
+            else:
+                _dict.pop(k1, None)
+                print('There is no input section for {} component. Skip it!'.format(k1))
+        else:
+            sys.exit('File not found: {}'.format(input file))
 
     # open file object to store list of files and their hashes
     fhash = open('file_checksum.lock', 'w')
