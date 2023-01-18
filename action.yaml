@@ -150,7 +150,7 @@ runs:
         export PYTHONPATH=~/.local:$PYTHONPATH
         mkdir -p ${{ inputs.app_install_dir }}/run/INPUT
         cd ${{ inputs.app_install_dir }}/run/INPUT
-        #python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+        python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
       shell: bash
 
     # generate configuration files
