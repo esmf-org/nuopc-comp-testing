@@ -178,9 +178,9 @@ runs:
         cat datm.streams
         cat esmxRun.config
         cat fd_nems.yaml
-        #mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        #cat PET*
-        #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+        cat PET*
+        tar -czvf log_files.tar.gz PET* out_err.txt datm.log
       shell: bash
 
     # upload model results to artifacts to check it later
