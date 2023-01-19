@@ -208,3 +208,4 @@ runs:
         #  md5sum $i >> output_hash.txt
         #done
         #cat output_hash.txt
+      shell: bash
