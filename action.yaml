@@ -201,12 +201,12 @@ runs:
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
         # get date for old baseline
-        echo ${{ github.ref }}
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
-          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
-          /repos/${{ github.repository }}/actions/caches | sort -n | \
-          grep "baseline-" | grep "${{ github.ref }}" | \
-          tail -n 1 | awk -F\- '{print $2}')
+        --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
+        /repos/${{ github.repository }}/actions/caches | sort -n | \
+        grep "baseline-" | grep "${{ github.ref }}" | \
+        tail -n 1 | awk -F\- '{print $2}')
+        echo $BL_DATE_OLD
         # if there is no baseline assign new date
         if [ -z "$BL_DATE_OLD" ]; then
           BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
