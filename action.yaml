@@ -13,6 +13,7 @@ inputs:
   artifacts_files:
     description: list of files that will be pushed to artifacts
     required: false
+    default: None
   artifacts_retention_period:
     description: custom retention period for individual artifacts
     required: false
@@ -163,7 +164,6 @@ runs:
         fi
         cd ${{ inputs.app_install_dir }}/run
         python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
-        ls -al ${{ inputs.app_install_dir }}/run
       shell: bash
 
     # generate configuration files
@@ -181,14 +181,13 @@ runs:
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
         mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        echo ">${{ inputs.artifacts_files }}<"
-        #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
       shell: bash
 
-    # upload model results to artifacts to check it later
-    #- name: Upload Output to Artifacts
-    #  uses: actions/upload-artifact@v3
-    #  with:
-    #    name: model output
-    #    path: /comp.test.lnd*.nc
-    #    retention-days: ${{ inputs.artifacts_retention_period }}
+    # upload model artifacts to check it later
+    - name: Artifacts for ${{ github.workflow }}
+      uses: actions/upload-artifact@v3
+      if: ${{ inputs.artifacts_files }} != 'None'
+      with:
+        name: model artifacts 
+        path: ${{ inputs.artifacts_files }}
+        retention-days: ${{ inputs.artifacts_retention_period }}
