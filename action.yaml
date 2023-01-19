@@ -202,10 +202,10 @@ runs:
       run: |
         # get date for old baseline
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
-          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref + " " + .created_at' \
+          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
           /repos/${{ github.repository }}/actions/caches | sort -n | \
           grep "baseline-" | grep "${{ github.github_ref }}" | \
-          tail -n 1 | awk '{print $4}')
+          tail -n 1 | awk -F\- '{print $2}')
         # if there is no baseline assign new date
         if [ -z "$BL_DATE_OLD" ]; then
           BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
@@ -252,43 +252,42 @@ runs:
         fi
       shell: bash
 
-      # restore baseline hash file and files from cache
-      #- name: Restore Baseline Hash File From Cache
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      ${{ github.workspace }}/app/build/output_hash_baseline.txt
-      #      ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc
-      #    key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
-      #    restore-keys: |
-      #      baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+    # restore baseline hash file and files from cache
+    - name: Restore Baseline Hash File From Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
+        key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+        restore-keys: |
+          baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
 
+    # compare with the baseline
+    - name: Compare with Baseline or Create New One
+      id: compare-baseline
+      run: |
+        cd ${{ github.workspace }}/app/run
+        # compare against the baseline, returns false if it does not match
+        if [ -f "output_hash_baseline.txt" ]; then
+          echo "Baseline:"
+          cat output_hash_baseline.txt
+          echo "Current Run:"
+          cat output_hash.txt
+          echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+        # there is no baseline, just copy current one as baseline  
+        else
+          echo "Current run will be used as a baseline."
+          # print out content of the has file
+          cat output_hash.txt
+          cp output_hash.txt output_hash_baseline.txt
+          echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
 
-    # calculate hashes
-    #- name: Calculate Hashes of Output Files
-    #  if: ${{ inputs.baseline_files }} != 'None'
-    #  run: |
-    #    ls -al ${{ inputs.app_install_dir }}/run
-    #    for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
-    #    do
-    #      if echo x"$i" | grep '*' > /dev/null; then
-    #        lst2=`ls -al $i | awk '{print $9}'`
-    #        for j in $lst2; do
-    #          md5sum $j >> output_hash.txt
-    #        done
-    #      else
-    #        md5sum $i >> output_hash.txt
-    #      fi    
-    #    done
-    #    cat output_hash.txt
-    #  shell: bash
-
-    # restore baseline hash file from cache
-    #- name: Restore Baseline Hash File From Cache
-    #  uses: actions/cache@v3
-    #  if: ${{ env.REGENERATE_BASELINE }} != 'true'
-    #  with:
-    #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
-    #    key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
-    #    restore-keys: |
-    #      baseline-
+    # Force to fail if the results are not matched with the baseline
+    - name: Result of Baseline Check
+      if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
+      uses: actions/github-script@v3
+      with:
+        script: |
+          core.setFailed('The results do not match with the baseline!')
