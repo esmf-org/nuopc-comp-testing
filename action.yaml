@@ -146,7 +146,7 @@ runs:
       with:
         #path: ${{ inputs.app_install_dir }}/run/INPUT
         path: ${{ inputs.cache_input_file_list }}
-        key: input-${{ hashFiles('${{ inputs.app_install_dir }}/run/file_checksum.lock') }}
+        key: input-${{ hashFiles('app/run/file_checksum.lock') }}
         restore-keys: |
             input
 
