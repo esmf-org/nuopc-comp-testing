@@ -199,7 +199,7 @@ runs:
     - name: Calculate Hashes of Output Files
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-        for i in $(echo "$lst" | awk '$1=$1' RS= OFS=" ")
+        for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
         do
           if echo x"$i" | grep '*' > /dev/null; then
             lst2=`ls -al $i | awk '{print $9}'`
