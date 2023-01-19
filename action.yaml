@@ -137,7 +137,6 @@ runs:
           -i ${{ inputs.dependencies_install_dir }} \
           -m ${{ inputs.component_name }} \
           -n ${{ inputs.component_module_name }}
-        echo ${{ hashFiles('**/file_checksum.lock') }}
       shell: bash
 
     # restore input files from cache
@@ -147,7 +146,7 @@ runs:
       with:
         #path: ${{ inputs.app_install_dir }}/run/INPUT
         path: ${{ inputs.cache_input_file_list }}
-        key: input-${{ hashFiles('**/file_checksum.lock') }}
+        key: input-${{ hashFiles('${{ inputs.app_install_dir }}/run/file_checksum.lock') }}
         restore-keys: |
             input
 
