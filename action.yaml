@@ -199,7 +199,7 @@ runs:
     - name: Calculate Hashes of Output Files
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-        for i in "${{ inputs.artifacts_files }}"; do
+        for i in "${{ inputs.baseline_files }}"; do
           echo $i
         done
         #cd ${{ github.workspace }}/app/build
