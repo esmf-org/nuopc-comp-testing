@@ -199,6 +199,7 @@ runs:
     - name: Calculate Hashes of Output Files
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
+        ls -al ${{ inputs.app_install_dir }}/run
         for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
         do
           if echo x"$i" | grep '*' > /dev/null; then
