@@ -53,159 +53,162 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # checkout base repository
-    - name: Checkout Component Repository
-      uses: actions/checkout@v3
-      with:
-        path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
+   # # checkout base repository
+   # - name: Checkout Component Repository
+   #   uses: actions/checkout@v3
+   #   with:
+   #     path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
 
-    # prepare core environment
-    - name: Install Core Development Tools
-      run: |
-        sudo apt-get -qq update
-        sudo apt-get -qq install tar unzip file gringo
-        sudo apt-get -qq install build-essential binutils-dev gfortran
-        sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
-        sudo apt-get -qq install wget awscli ca-certificates gh
-        pip3 install --target ~/.local botocore
-      shell: bash
+   # # prepare core environment
+   # - name: Install Core Development Tools
+   #   run: |
+   #     sudo apt-get -qq update
+   #     sudo apt-get -qq install tar unzip file gringo
+   #     sudo apt-get -qq install build-essential binutils-dev gfortran
+   #     sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
+   #     sudo apt-get -qq install wget awscli ca-certificates gh
+   #     pip3 install --target ~/.local botocore
+   #   shell: bash
 
-    # concretize dependencies
-    - name: Concretize Spack Environment Using YAML Specification
-      id: concretize-deps
-      run: |
-        $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
-          -a ${{ inputs.architecture }} \
-          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
-          -i ${{ inputs.dependencies_install_dir }} \
-          -r $GITHUB_WORKSPACE
-      shell: bash
+   # # concretize dependencies
+   # - name: Concretize Spack Environment Using YAML Specification
+   #   id: concretize-deps
+   #   run: |
+   #     $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
+   #       -a ${{ inputs.architecture }} \
+   #       -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+   #       -i ${{ inputs.dependencies_install_dir }} \
+   #       -r $GITHUB_WORKSPACE
+   #   shell: bash
 
-    # restore dependencies from cache
-    - name: Restore Dependencies
-      id: restore-deps 
-      uses: actions/cache@v3
-      with:
-        path: ${{ inputs.dependencies_install_dir }} 
-        key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
-        restore-keys: |
-          spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+   # # restore dependencies from cache
+   # - name: Restore Dependencies
+   #   id: restore-deps 
+   #   uses: actions/cache@v3
+   #   with:
+   #     path: ${{ inputs.dependencies_install_dir }} 
+   #     key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
+   #     restore-keys: |
+   #       spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
 
-    # install dependencies
-    - name: Install Dependencies with Spack 
-      id: install-deps
-      run: |
-        $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-          -r $GITHUB_WORKSPACE
-      shell: bash
+   # # install dependencies
+   # - name: Install Dependencies with Spack 
+   #   id: install-deps
+   #   run: |
+   #     $GITHUB_ACTION_PATH/scripts/install_deps.sh \
+   #       -r $GITHUB_WORKSPACE
+   #   shell: bash
 
-    # checkout data models
-    - name: Checkout CDEPS
-      uses: actions/checkout@v3
-      with:
-        repository: uturuncoglu/CDEPS
-        path: ${{ inputs.app_install_dir }}/cdeps
-        ref: hotfix/std_build
+   # # checkout data models
+   # - name: Checkout CDEPS
+   #   uses: actions/checkout@v3
+   #   with:
+   #     repository: uturuncoglu/CDEPS
+   #     path: ${{ inputs.app_install_dir }}/cdeps
+   #     ref: hotfix/std_build
 
-    # build and install data models
-    - name: Build and Install CDEPS
-      run: |
-        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-        export ESMFMKFILE=${{ inputs.dependencies_install_dir }}/view/lib/esmf.mk
-        export FC=gfortran
-        cd ${{ inputs.app_install_dir }}/cdeps
-        mkdir build
-        cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${{ inputs.app_install_dir }} \
-          -DPIO_C_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
-          -DPIO_C_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
-          -DPIO_Fortran_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
-          -DPIO_Fortran_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
-          -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
-          -DDISABLE_FoX=ON ../
-        make
-        make install
-      shell: bash
+   # # build and install data models
+   # - name: Build and Install CDEPS
+   #   run: |
+   #     export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+   #     export ESMFMKFILE=${{ inputs.dependencies_install_dir }}/view/lib/esmf.mk
+   #     export FC=gfortran
+   #     cd ${{ inputs.app_install_dir }}/cdeps
+   #     mkdir build
+   #     cd build
+   #     cmake -DCMAKE_INSTALL_PREFIX=${{ inputs.app_install_dir }} \
+   #       -DPIO_C_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
+   #       -DPIO_C_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
+   #       -DPIO_Fortran_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
+   #       -DPIO_Fortran_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
+   #       -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
+   #       -DDISABLE_FoX=ON ../
+   #     make
+   #     make install
+   #   shell: bash
 
-    # build component
-    - name: Build and Install Component
-      run: |
-        cd ${{ inputs.app_install_dir }}
-        echo "${{ inputs.component_build }}" >> install_comp.sh
-        chmod 755 install_comp.sh
-        ./install_comp.sh
-      shell: bash
+   # # build component
+   # - name: Build and Install Component
+   #   run: |
+   #     cd ${{ inputs.app_install_dir }}
+   #     echo "${{ inputs.component_build }}" >> install_comp.sh
+   #     chmod 755 install_comp.sh
+   #     ./install_comp.sh
+   #   shell: bash
 
-    # use ESMX generic driver and create executable
-    - name: Use ESMX to create executable
-      run: |
-        $GITHUB_ACTION_PATH/scripts/create_exe.sh \
-          -a ${{ inputs.app_install_dir }} \
-          -d ${{ inputs.data_component_name }} \
-          -i ${{ inputs.dependencies_install_dir }} \
-          -m ${{ inputs.component_name }} \
-          -n ${{ inputs.component_module_name }}
-      shell: bash
+   # # use ESMX generic driver and create executable
+   # - name: Use ESMX to create executable
+   #   run: |
+   #     $GITHUB_ACTION_PATH/scripts/create_exe.sh \
+   #       -a ${{ inputs.app_install_dir }} \
+   #       -d ${{ inputs.data_component_name }} \
+   #       -i ${{ inputs.dependencies_install_dir }} \
+   #       -m ${{ inputs.component_name }} \
+   #       -n ${{ inputs.component_module_name }}
+   #   shell: bash
 
-    # restore input files from cache
-    - name: Restore Input Files From Cache
-      id: cache-input
-      uses: actions/cache@v3
-      with:
-        path: ${{ inputs.cache_input_file_list }}
-        key: input-
-        restore-keys: |
-            input
+   # # restore input files from cache
+   # - name: Restore Input Files From Cache
+   #   id: cache-input
+   #   uses: actions/cache@v3
+   #   with:
+   #     path: ${{ inputs.cache_input_file_list }}
+   #     key: input-
+   #     restore-keys: |
+   #         input
 
-    # create run directory and download input
-    # no need to check the cache hit since script is able to check the existing files and not download again
-    - name: Download Input Files
-      run: |
-        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-        export PYTHONPATH=~/.local:$PYTHONPATH
-        if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
-          mkdir ${{ inputs.app_install_dir }}/run
-        fi
-        cd ${{ inputs.app_install_dir }}/run
-        python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
-      shell: bash
+   # # create run directory and download input
+   # # no need to check the cache hit since script is able to check the existing files and not download again
+   # - name: Download Input Files
+   #   run: |
+   #     export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+   #     export PYTHONPATH=~/.local:$PYTHONPATH
+   #     if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
+   #       mkdir ${{ inputs.app_install_dir }}/run
+   #     fi
+   #     cd ${{ inputs.app_install_dir }}/run
+   #     python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+   #   shell: bash
 
-    # generate configuration files
-    - name: Generate Configuration Files
-      run: |
-        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
-        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
-        cd ${{ inputs.app_install_dir }}/run
-        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
-      shell: bash
+   # # generate configuration files
+   # - name: Generate Configuration Files
+   #   run: |
+   #     export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
+   #     export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+   #     cd ${{ inputs.app_install_dir }}/run
+   #     python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
+   #   shell: bash
 
-    # run application
-    - name: Run Application
-      run: |
-        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-        cd ${{ inputs.app_install_dir }}/run
-        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-      shell: bash
+   # # run application
+   # - name: Run Application
+   #   run: |
+   #     export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+   #     cd ${{ inputs.app_install_dir }}/run
+   #     mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+   #   shell: bash
 
-    # upload model artifacts to check it later
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: artifacts for ${{ github.workflow }}
-        path: ${{ inputs.artifacts_files }}
-        retention-days: ${{ inputs.artifacts_retention_period }}
+   # # upload model artifacts to check it later
+   # - name: Upload Artifacts
+   #   uses: actions/upload-artifact@v3
+   #   with:
+   #     name: artifacts for ${{ github.workflow }}
+   #     path: ${{ inputs.artifacts_files }}
+   #     retention-days: ${{ inputs.artifacts_retention_period }}
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
       id: get-bl-previous 
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
+        gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches | sort -n | grep "baseline-" | grep "${{ github.ref }}" | tail -n 1 | awk -F\- '{print $2}'
+
+
         # get date for old baseline
-        BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
-        --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
-        /repos/${{ github.repository }}/actions/caches | sort -n | \
-        grep "baseline-" | grep "${{ github.ref }}" | \
-        tail -n 1 | awk -F\- '{print $2}')
+        #BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
+        #--jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
+        #/repos/${{ github.repository }}/actions/caches | sort -n | \
+        #grep "baseline-" | grep "${{ github.ref }}" | \
+        #tail -n 1 | awk -F\- '{print $2}')
         # if there is no baseline assign new date
         #if [ -z "$BL_DATE_OLD" ]; then
         #  BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
