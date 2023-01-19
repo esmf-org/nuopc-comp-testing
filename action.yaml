@@ -199,13 +199,16 @@ runs:
     - name: Calculate Hashes of Output Files
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-        for i in "${{ inputs.baseline_files }}"; do
-          echo $i
+        for i in $(echo "$lst" | awk '$1=$1' RS= OFS=" ")
+        do
+          if echo x"$i" | grep '*' > /dev/null; then
+            lst2=`ls -al $i | awk '{print $9}'`
+            for j in $lst2; do
+              md5sum $j >> output_hash.txt
+            done
+          else
+            md5sum $i >> output_hash.txt
+          fi    
         done
-        #cd ${{ github.workspace }}/app/build
-        #lst=`ls -al comp.test.lnd.out.*.nc | awk '{print $9}'`
-        #for i in $lst; do
-        #  md5sum $i >> output_hash.txt
-        #done
-        #cat output_hash.txt
+        cat output_hash.txt
       shell: bash
