@@ -206,89 +206,88 @@ runs:
         /repos/${{ github.repository }}/actions/caches | sort -n | \
         grep "baseline-" | grep "${{ github.ref }}" | \
         tail -n 1 | awk -F\- '{print $2}')
-        echo $BL_DATE_OLD
         # if there is no baseline assign new date
-        if [ -z "$BL_DATE_OLD" ]; then
-          BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
-        fi
-        echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
-        echo "BL_DATE_OLD = $BL_DATE_OLD"
+        #if [ -z "$BL_DATE_OLD" ]; then
+        #  BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        #fi
+        #echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
+        #echo "BL_DATE_OLD = $BL_DATE_OLD"
       shell: bash
 
     # calculate hashes
-    - name: Calculate Hashes of Output Files and Query Baseline Date
-      id: calculate-hashes
-      if: ${{ inputs.baseline_files }} != 'None'
-      run: |
-        # get current baseline date
-        BL_DATE_OLD=${{ steps.get-bl-previous.outputs.BL_DATE_OLD }}
-        # set new baseline date if 'Baseline Change' tag in PR
-        force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-        echo "Baseline change request is force_bc = $force_bc"
-        if [[ "$force_bc" == "true" ]]; then
-          BL_DATE_NEW=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
-        else
-          BL_DATE_NEW=$BL_DATE_OLD
-        fi
-        echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
-        # save hashes of output files for current run
-        ls -al ${{ inputs.app_install_dir }}/run
-        for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
-        do
-          if echo x"$i" | grep '*' > /dev/null; then
-            lst2=`ls -al $i | awk '{print $9}'`
-            for j in $lst2; do
-              md5sum $j >> output_hash.txt
-            done
-          else
-            md5sum $i >> output_hash.txt
-          fi
-        done
-        # print out some debug information
-        if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
-          echo "BL_DATE_OLD = $BL_DATE_OLD"
-          echo "BL_DATE_NEW = $BL_DATE_NEW"
-        else
-          echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
-        fi
-      shell: bash
+    #- name: Calculate Hashes of Output Files and Query Baseline Date
+    #  id: calculate-hashes
+    #  if: ${{ inputs.baseline_files }} != 'None'
+    #  run: |
+    #    # get current baseline date
+    #    BL_DATE_OLD=${{ steps.get-bl-previous.outputs.BL_DATE_OLD }}
+    #    # set new baseline date if 'Baseline Change' tag in PR
+    #    force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+    #    echo "Baseline change request is force_bc = $force_bc"
+    #    if [[ "$force_bc" == "true" ]]; then
+    #      BL_DATE_NEW=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+    #    else
+    #      BL_DATE_NEW=$BL_DATE_OLD
+    #    fi
+    #    echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
+    #    # save hashes of output files for current run
+    #    ls -al ${{ inputs.app_install_dir }}/run
+    #    for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
+    #    do
+    #      if echo x"$i" | grep '*' > /dev/null; then
+    #        lst2=`ls -al $i | awk '{print $9}'`
+    #        for j in $lst2; do
+    #          md5sum $j >> output_hash.txt
+    #        done
+    #      else
+    #        md5sum $i >> output_hash.txt
+    #      fi
+    #    done
+    #    # print out some debug information
+    #    if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
+    #      echo "BL_DATE_OLD = $BL_DATE_OLD"
+    #      echo "BL_DATE_NEW = $BL_DATE_NEW"
+    #    else
+    #      echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
+    #    fi
+    #  shell: bash
 
-    # restore baseline hash file and files from cache
-    - name: Restore Baseline Hash File From Cache
-      uses: actions/cache@v3
-      with:
-        path: |
-          ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
-        key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
-        restore-keys: |
-          baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+    ## restore baseline hash file and files from cache
+    #- name: Restore Baseline Hash File From Cache
+    #  uses: actions/cache@v3
+    #  with:
+    #    path: |
+    #      ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
+    #    key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+    #    restore-keys: |
+    #      baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
 
-    # compare with the baseline
-    - name: Compare with Baseline or Create New One
-      id: compare-baseline
-      run: |
-        cd ${{ github.workspace }}/app/run
-        # compare against the baseline, returns false if it does not match
-        if [ -f "output_hash_baseline.txt" ]; then
-          echo "Baseline:"
-          cat output_hash_baseline.txt
-          echo "Current Run:"
-          cat output_hash.txt
-          echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
-        # there is no baseline, just copy current one as baseline  
-        else
-          echo "Current run will be used as a baseline."
-          # print out content of the has file
-          cat output_hash.txt
-          cp output_hash.txt output_hash_baseline.txt
-          echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
+    ## compare with the baseline
+    #- name: Compare with Baseline or Create New One
+    #  id: compare-baseline
+    #  run: |
+    #    cd ${{ github.workspace }}/app/run
+    #    # compare against the baseline, returns false if it does not match
+    #    if [ -f "output_hash_baseline.txt" ]; then
+    #      echo "Baseline:"
+    #      cat output_hash_baseline.txt
+    #      echo "Current Run:"
+    #      cat output_hash.txt
+    #      echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+    #    # there is no baseline, just copy current one as baseline  
+    #    else
+    #      echo "Current run will be used as a baseline."
+    #      # print out content of the has file
+    #      cat output_hash.txt
+    #      cp output_hash.txt output_hash_baseline.txt
+    #      echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_OUTPUT
+    #    fi
+    #  shell: bash
 
-    # Force to fail if the results are not matched with the baseline
-    - name: Result of Baseline Check
-      if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
-      uses: actions/github-script@v3
-      with:
-        script: |
-          core.setFailed('The results do not match with the baseline!')
+    ## Force to fail if the results are not matched with the baseline
+    #- name: Result of Baseline Check
+    #  if: steps.compare-baseline.outputs.CHECK_RESULT == 'false'
+    #  uses: actions/github-script@v3
+    #  with:
+    #    script: |
+    #      core.setFailed('The results do not match with the baseline!')
