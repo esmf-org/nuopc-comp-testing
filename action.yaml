@@ -13,11 +13,15 @@ inputs:
   artifacts_files:
     description: list of files that will be pushed to artifacts
     required: false
-    default: none 
+    default: None 
   artifacts_retention_period:
     description: custom retention period for individual artifacts
     required: false
     default: 2
+  baseline_files:
+    description: lit of files that will be used to create baseline file
+    required: false
+    default: None
   cache_input_file_list:
     description: list of input files that needs to be cached
     required: false
@@ -190,3 +194,17 @@ runs:
         name: artifacts for ${{ github.workflow }}
         path: ${{ inputs.artifacts_files }}
         retention-days: ${{ inputs.artifacts_retention_period }}
+
+    # calculate hashes
+    - name: Calculate Hashes of Output Files
+      if: ${{ inputs.baseline_files }} != 'None'
+      run: |
+        for i in ${{ inputs.artifacts_files }}; do
+          echo $i
+        done
+        #cd ${{ github.workspace }}/app/build
+        #lst=`ls -al comp.test.lnd.out.*.nc | awk '{print $9}'`
+        #for i in $lst; do
+        #  md5sum $i >> output_hash.txt
+        #done
+        #cat output_hash.txt
