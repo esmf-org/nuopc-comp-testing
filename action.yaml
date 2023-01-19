@@ -13,7 +13,7 @@ inputs:
   artifacts_files:
     description: list of files that will be pushed to artifacts
     required: false
-    default: None
+    default: none 
   artifacts_retention_period:
     description: custom retention period for individual artifacts
     required: false
@@ -184,10 +184,9 @@ runs:
       shell: bash
 
     # upload model artifacts to check it later
-    - name: Artifacts for ${{ github.workflow }}
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v3
-      if: ${{ inputs.artifacts_files }} != 'None'
       with:
-        name: model artifacts 
+        name: artifacts for ${{ github.workflow }}
         path: ${{ inputs.artifacts_files }}
         retention-days: ${{ inputs.artifacts_retention_period }}
