@@ -50,6 +50,10 @@ inputs:
     description: YAML file that describes the test
     required: true
 
+env:
+  # set token to access gh command
+  GH_TOKEN: ${{ github.token }}
+
 runs:
   using: "composite"
   steps:
