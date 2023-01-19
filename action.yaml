@@ -14,6 +14,9 @@ inputs:
     description: custom retention period for individual artifacts
     required: false
     default: 2
+  cache_input_file_list:
+    description: list of input files that needs to be cached
+    required: false
   component_name:
     description: component name
     required: false
@@ -134,6 +137,7 @@ runs:
           -i ${{ inputs.dependencies_install_dir }} \
           -m ${{ inputs.component_name }} \
           -n ${{ inputs.component_module_name }}
+        echo ${{ hashFiles('**/file_checksum.lock') }}
       shell: bash
 
     # restore input files from cache
@@ -141,7 +145,8 @@ runs:
       id: cache-input
       uses: actions/cache@v3
       with:
-        path: ${{ inputs.app_install_dir }}/run/INPUT
+        #path: ${{ inputs.app_install_dir }}/run/INPUT
+        path: ${{ inputs.cache_input_file_list }}
         key: input-${{ hashFiles('**/file_checksum.lock') }}
         restore-keys: |
             input
@@ -160,30 +165,22 @@ runs:
       shell: bash
 
     # generate configuration files
-    - name: Generate Configuration Files
-      run: |
-        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
-        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
-        cd ${{ inputs.app_install_dir }}/run
-        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
-      shell: bash
+    #- name: Generate Configuration Files
+    #  run: |
+    #    export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
+    #    export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+    #    cd ${{ inputs.app_install_dir }}/run
+    #    python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
+    #  shell: bash
 
     # run application
-    - name: Run Application
-      run: |
-        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-        cd ${{ inputs.app_install_dir }}/run
-        ls -al .
-        ls -al INPUT/
-        cat input.nml
-        cat datm_in
-        cat datm.streams
-        cat esmxRun.config
-        cat fd_nems.yaml
-        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        cat PET*
-        tar -czvf log_files.tar.gz PET* out_err.txt datm.log
-      shell: bash
+    #- name: Run Application
+    #  run: |
+    #    export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+    #    cd ${{ inputs.app_install_dir }}/run
+    #    mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+    #    #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+    #  shell: bash
 
     # upload model results to artifacts to check it later
     #- name: Upload Output to Artifacts
