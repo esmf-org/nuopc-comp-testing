@@ -144,9 +144,8 @@ runs:
       id: cache-input
       uses: actions/cache@v3
       with:
-        #path: ${{ inputs.app_install_dir }}/run/INPUT
         path: ${{ inputs.cache_input_file_list }}
-        key: input-${{ hashFiles('app/run/file_checksum.lock') }}
+        key: input-${{ hashFiles('**/**/file_checksum.lock') }}
         restore-keys: |
             input
 
@@ -161,6 +160,7 @@ runs:
         fi
         cd ${{ inputs.app_install_dir }}/run
         python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+        ls -al ${{ inputs.app_install_dir }}/run
       shell: bash
 
     # generate configuration files
