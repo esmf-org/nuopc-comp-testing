@@ -195,10 +195,42 @@ runs:
         path: ${{ inputs.artifacts_files }}
         retention-days: ${{ inputs.artifacts_retention_period }}
 
-    # calculate hashes
-    - name: Calculate Hashes of Output Files
+    # find baseline date from cache, the most recent baseline will be picked
+    - name: Query Date for Old Baseline From Cache
+      id: get-bl-previous 
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
+        # get date for old baseline
+        BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
+          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref + " " + .created_at' \
+          /repos/${{ github.repository }}/actions/caches | sort -n | \
+          grep "baseline-" | grep "${{ github.github_ref }}" | \
+          tail -n 1 | awk '{print $4}')
+        # if there is no baseline assign new date
+        if [ -z "$BL_DATE_OLD" ]; then
+          BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        fi
+        echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
+        echo "BL_DATE_OLD = $BL_DATE_OLD"
+      shell: bash
+
+    # calculate hashes
+    - name: Calculate Hashes of Output Files and Query Baseline Date
+      id: calculate-hashes
+      if: ${{ inputs.baseline_files }} != 'None'
+      run: |
+        # get current baseline date
+        BL_DATE_OLD=${{ steps.get-bl-previous.outputs.BL_DATE_OLD }}
+        # set new baseline date if 'Baseline Change' tag in PR
+        force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+        echo "Baseline change request is force_bc = $force_bc"
+        if [[ "$force_bc" == "true" ]]; then
+          BL_DATE_NEW=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        else
+          BL_DATE_NEW=$BL_DATE_OLD
+        fi
+        echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
+        # save hashes of output files for current run
         ls -al ${{ inputs.app_install_dir }}/run
         for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
         do
@@ -209,7 +241,54 @@ runs:
             done
           else
             md5sum $i >> output_hash.txt
-          fi    
+          fi
         done
-        cat output_hash.txt
+        # print out some debug information
+        if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
+          echo "BL_DATE_OLD = $BL_DATE_OLD"
+          echo "BL_DATE_NEW = $BL_DATE_NEW"
+        else
+          echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
+        fi
       shell: bash
+
+      # restore baseline hash file and files from cache
+      #- name: Restore Baseline Hash File From Cache
+      #  uses: actions/cache@v3
+      #  with:
+      #    path: |
+      #      ${{ github.workspace }}/app/build/output_hash_baseline.txt
+      #      ${{ github.workspace }}/app/build/baseline/comp.test.lnd.out.*.nc
+      #    key: baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+      #    restore-keys: |
+      #      baseline-${{ steps.calculate-hashes.outputs.BL_DATE_NEW }}
+
+
+    # calculate hashes
+    #- name: Calculate Hashes of Output Files
+    #  if: ${{ inputs.baseline_files }} != 'None'
+    #  run: |
+    #    ls -al ${{ inputs.app_install_dir }}/run
+    #    for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
+    #    do
+    #      if echo x"$i" | grep '*' > /dev/null; then
+    #        lst2=`ls -al $i | awk '{print $9}'`
+    #        for j in $lst2; do
+    #          md5sum $j >> output_hash.txt
+    #        done
+    #      else
+    #        md5sum $i >> output_hash.txt
+    #      fi    
+    #    done
+    #    cat output_hash.txt
+    #  shell: bash
+
+    # restore baseline hash file from cache
+    #- name: Restore Baseline Hash File From Cache
+    #  uses: actions/cache@v3
+    #  if: ${{ env.REGENERATE_BASELINE }} != 'true'
+    #  with:
+    #    path: ${{ github.workspace }}/app/build/output_hash_baseline.txt
+    #    key: baseline-${{ hashFiles('output_hash_baseline.txt') }}
+    #    restore-keys: |
+    #      baseline-
