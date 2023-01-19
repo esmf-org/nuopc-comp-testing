@@ -10,6 +10,9 @@ inputs:
     description: spack target architecture
     required: false
     default: x86_64_v4
+  artifacts_files:
+    description: list of files that will be pushed to artifacts
+    required: false
   artifacts_retention_period:
     description: custom retention period for individual artifacts
     required: false
@@ -145,7 +148,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ${{ inputs.cache_input_file_list }}
-        key: input-${{ hashFiles('**/**/file_checksum.lock') }}
+        key: input-
         restore-keys: |
             input
 
@@ -164,22 +167,23 @@ runs:
       shell: bash
 
     # generate configuration files
-    #- name: Generate Configuration Files
-    #  run: |
-    #    export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
-    #    export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
-    #    cd ${{ inputs.app_install_dir }}/run
-    #    python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
-    #  shell: bash
+    - name: Generate Configuration Files
+      run: |
+        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
+        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+        cd ${{ inputs.app_install_dir }}/run
+        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
+      shell: bash
 
     # run application
-    #- name: Run Application
-    #  run: |
-    #    export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-    #    cd ${{ inputs.app_install_dir }}/run
-    #    mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-    #    #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
-    #  shell: bash
+    - name: Run Application
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        cd ${{ inputs.app_install_dir }}/run
+        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
+        echo ">${{ inputs.artifacts_files }}<"
+        #tar -czvf log_files.tar.gz PET* out_err.txt datm.log
+      shell: bash
 
     # upload model results to artifacts to check it later
     #- name: Upload Output to Artifacts
