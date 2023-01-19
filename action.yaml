@@ -53,22 +53,22 @@ inputs:
 runs:
   using: "composite"
   steps:
-   # # checkout base repository
-   # - name: Checkout Component Repository
-   #   uses: actions/checkout@v3
-   #   with:
-   #     path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
+    # checkout base repository
+    - name: Checkout Component Repository
+      uses: actions/checkout@v3
+      with:
+        path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
 
-   # # prepare core environment
-   # - name: Install Core Development Tools
-   #   run: |
-   #     sudo apt-get -qq update
-   #     sudo apt-get -qq install tar unzip file gringo
-   #     sudo apt-get -qq install build-essential binutils-dev gfortran
-   #     sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
-   #     sudo apt-get -qq install wget awscli ca-certificates gh
-   #     pip3 install --target ~/.local botocore
-   #   shell: bash
+    # prepare core environment
+    - name: Install Core Development Tools
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get -qq install tar unzip file gringo
+        sudo apt-get -qq install build-essential binutils-dev gfortran
+        sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
+        sudo apt-get -qq install wget awscli ca-certificates gh
+        pip3 install --target ~/.local botocore
+      shell: bash
 
    # # concretize dependencies
    # - name: Concretize Spack Environment Using YAML Specification
