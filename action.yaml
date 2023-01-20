@@ -200,23 +200,18 @@ runs:
       id: get-bl-previous 
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-        gh api -H "Accept: application/vnd.github+json" \
-          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
-          /repos/${{ github.repository }}/actions/caches | \
-          sort -n | grep "baseline-" | ( grep "${{ github.ref }}" || true ) | cat
-        #gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches | sort -n | grep "baseline-" | grep "${{ github.ref }}" | tail -n 1 | awk -F\- '{print $2}'
         # get date for old baseline
-        #BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
-        #--jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
-        #/repos/${{ github.repository }}/actions/caches | sort -n | \
-        #grep "baseline-" | grep "${{ github.ref }}" | \
-        #tail -n 1 | awk -F\- '{print $2}')
+        BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
+        --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
+        /repos/${{ github.repository }}/actions/caches | sort -n | \
+        ( grep "baseline-" || true ) | ( grep "${{ github.ref }}" || true ) | \
+        tail -n 1 | awk -F\- '{print $2}')
         # if there is no baseline assign new date
-        #if [ -z "$BL_DATE_OLD" ]; then
-        #  BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
-        #fi
-        #echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
-        #echo "BL_DATE_OLD = $BL_DATE_OLD"
+        if [ -z "$BL_DATE_OLD" ]; then
+          BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        fi
+        echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_OUTPUT
+        echo "BL_DATE_OLD = $BL_DATE_OLD"
       shell: bash
 
     # calculate hashes
