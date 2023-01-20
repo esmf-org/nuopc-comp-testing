@@ -197,17 +197,11 @@ runs:
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
-      env:
-        # set token to access gh command
-        GH_TOKEN="${{ github.token }}"
-        echo "GH_TOKEN=${GH_TOKEN}" >> $GITHUB_ENV
       id: get-bl-previous 
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-
-        gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches | sort -n | grep "baseline-" | grep "${{ github.ref }}" | tail -n 1 | awk -F\- '{print $2}'
-
-
+        gh api -H "Accept: application/vnd.github+json" /repos/esmf-org/noahmp/actions/caches
+        #gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches | sort -n | grep "baseline-" | grep "${{ github.ref }}" | tail -n 1 | awk -F\- '{print $2}'
         # get date for old baseline
         #BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
         #--jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
