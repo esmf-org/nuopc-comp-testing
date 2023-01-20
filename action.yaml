@@ -200,7 +200,7 @@ runs:
       id: get-bl-previous 
       if: ${{ inputs.baseline_files }} != 'None'
       run: |
-        gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/caches
+        gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches
         #gh api -H "Accept: application/vnd.github+json" --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' /repos/${{ github.repository }}/actions/caches | sort -n | grep "baseline-" | grep "${{ github.ref }}" | tail -n 1 | awk -F\- '{print $2}'
         # get date for old baseline
         #BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
