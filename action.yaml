@@ -229,21 +229,18 @@ runs:
         fi
         echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
         # save hashes of output files for current run
-        echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" "
+        cd ${{ inputs.app_install_dir }}/run
         for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
         do
           if echo x"$i" | grep '*' > /dev/null; then
             lst2=`ls -al $i | awk '{print $9}'`
             for j in $lst2; do
-              echo $j
               md5sum $j >> output_hash.txt
             done
           else
-            echo $i
             md5sum $i >> output_hash.txt
           fi
         done
-        cat output_hash.txt
         # print out some debug information
         if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
           echo "BL_DATE_OLD = $BL_DATE_OLD"
@@ -267,7 +264,7 @@ runs:
     - name: Compare with Baseline or Create New One
       id: compare-baseline
       run: |
-        cd ${{ github.workspace }}/app/run
+        cd ${{ inputs.app_install_dir }}/run
         # compare against the baseline, returns false if it does not match
         if [ -f "output_hash_baseline.txt" ]; then
           echo "Baseline:"
