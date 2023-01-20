@@ -229,18 +229,21 @@ runs:
         fi
         echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_OUTPUT
         # save hashes of output files for current run
-        ls -al ${{ inputs.app_install_dir }}/run
+        echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" "
         for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
         do
           if echo x"$i" | grep '*' > /dev/null; then
             lst2=`ls -al $i | awk '{print $9}'`
             for j in $lst2; do
+              echo $j
               md5sum $j >> output_hash.txt
             done
           else
+            echo $i
             md5sum $i >> output_hash.txt
           fi
         done
+        cat output_hash.txt
         # print out some debug information
         if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
           echo "BL_DATE_OLD = $BL_DATE_OLD"
