@@ -278,7 +278,7 @@ runs:
           # print out content of the has file
           cat output_hash.txt
           cp output_hash.txt output_hash_baseline.txt
-          echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_ENV
+          echo "CHECK_RESULT=$(echo 'false')" >> $GITHUB_ENV
         fi
       shell: bash
 
