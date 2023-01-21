@@ -200,6 +200,7 @@ runs:
           /repos/${{ github.repository }}/actions/caches | sort -n | \
           ( grep "baseline-" || true ) | ( grep "${{ github.ref }}" || true ) | \
           tail -n 1 | awk -F\- '{print $2"-"$3"-"$4}') | awk '{print $1}'
+        echo "BL_DATE_OLD=$BL_DATE_OLD - before"
         # if there is no baseline assign new date
         if [ -z "$BL_DATE_OLD" ]; then
           BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
