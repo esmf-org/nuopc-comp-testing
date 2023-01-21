@@ -72,7 +72,6 @@ runs:
 
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
-      id: concretize-deps
       run: |
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
@@ -83,7 +82,6 @@ runs:
 
     # restore dependencies from cache
     - name: Restore Dependencies
-      id: restore-deps 
       uses: actions/cache@v3
       with:
         path: ${{ inputs.dependencies_install_dir }} 
@@ -93,7 +91,6 @@ runs:
 
     # install dependencies
     - name: Install Dependencies with Spack 
-      id: install-deps
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -r $GITHUB_WORKSPACE
@@ -149,7 +146,6 @@ runs:
 
     # restore input files from cache
     - name: Restore Input Files From Cache
-      id: cache-input
       uses: actions/cache@v3
       with:
         path: ${{ inputs.cache_input_file_list }}
@@ -197,7 +193,6 @@ runs:
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
-      id: get-bl-previous 
       run: |
         # get date for old baseline
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
@@ -215,7 +210,6 @@ runs:
 
     # calculate hashes
     - name: Calculate Hashes of Output Files and Query Baseline Date
-      id: calculate-hashes
       run: |
         # get current baseline date
         BL_DATE_OLD=${{ env.BL_DATE_OLD }}
@@ -262,7 +256,6 @@ runs:
 
     # compare with the baseline
     - name: Compare with Baseline or Create New One
-      id: compare-baseline
       run: |
         cd ${{ inputs.app_install_dir }}/run
         # compare against the baseline, returns false if it does not match
@@ -284,8 +277,12 @@ runs:
 
     # Force to fail if the results are not matched with the baseline
     - name: Result of Baseline Check
-      if: ${{ env.CHECK_RESULT }} == 'false'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.setFailed('The results do not match with the baseline!')
+      run: 
+        if [ "${{ env.CHECK_RESULT }}" == "false" ]; then
+          echo "The results do not match with the baseline!"
+          exit 1
+        else
+          echo "The results match with the baseline."
+          exit 0
+        end if
+      shell: bash
