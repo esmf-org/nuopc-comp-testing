@@ -281,7 +281,7 @@ runs:
 
     # Force to fail if the results are not matched with the baseline
     - name: Result of Baseline Check
-      run: 
+      run: |
         if [[ "${{ env.CHECK_RESULT }}" == "false" ]]; then
           echo "The results do not match with the baseline!"
           exit 1
