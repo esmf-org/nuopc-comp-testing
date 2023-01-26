@@ -136,7 +136,7 @@ The top level driver `.yml` file includes information about [NUOPC run sequence]
 
 * `runseq` - This section defines the NUOPC run sequence to run the components and interaction among them. `dt` is used to define coupling interval (in seconds). The rest of the content of this section is used to define the run sequence. The unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq` part ensures the bit-to-bit reproducabilty for sipecified interpolation type, which is defined as `bilinear` in this example.
 
-* `input` - This section defines the set of inputs that are required for the driver. There could be multiple entries under this section. For example, `field_table` section basically downloads NUOPC field dictionary from UFS Weather Model repository using `wget` command. The [Python script](https://github.com/uturuncoglu/nuopc-comp-testing/blob/main/scripts/get_input.py) that is used to download data also supports other protocols such as `ftp`, `wget`, `s3` and `s3cli`. The optional `target_directory` argument also enable to specify target directory (both absolute and realtive paths are supported) for the retrieved data. 
+* `input` - These sections define the set of inputs that are required for the driver. There could be multiple entries under this section. For example, `field_table` section basically downloads NUOPC field dictionary from UFS Weather Model repository using `wget` command. The [Python script](https://github.com/uturuncoglu/nuopc-comp-testing/blob/main/scripts/get_input.py) that is used to download data also supports other protocols such as `ftp`, `wget`, `s3` and `s3cli`. The optional `target_directory` argument also enable to specify target directory (both absolute and realtive paths are supported) for the retrieved data. 
 
 * `config` - This section mainly used to create namelist files. It supports multiple formats: (1) Standard Fortran namelist (`nml:`)  and, (2) ESMF config (`nuopc:`) format
    
@@ -148,3 +148,5 @@ The top level driver `.yml` file includes information about [NUOPC run sequence]
 > It is also possible to add multiple namelist files in same format by modifying namelist tag as `nuopc1:`, `nuopc2:` etc.
 
 * `comp*` - This section defines the pointers for component model (incl. CDEPS) specific `.yml` files. The underlying infrastructure follow the file defined in here and read with the YAML parser to include the information defined in those files into internal Python dictionary that is used to parse information and perfrom the different operations. 
+
+##### YAML files for model components
