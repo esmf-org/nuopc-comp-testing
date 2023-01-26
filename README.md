@@ -25,6 +25,8 @@ The action mainly includes following features:
 ### v1
 
 * Added caching support for dependency installations, inputs and baseline
+* Added support to use `Baseline Change` label for PRs to pass baseline checking against the existing one
+* Both driver and component could have multiple `input` section in test definition `.yml` files 
 
 ## Usage
 
@@ -54,7 +56,7 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 
 #### Environment Variables
 
-* `GH_TOKEN` - This needs to be set to `${{ github.token }}`. It will aloow to run `gh`command in the composite action to access list of available baseline caches. 
+* `GH_TOKEN` - This needs to be set to `${{ github.token }}`. It will aloow to run `gh` command in the composite action to access list of available baseline caches and find the correct baseline to check it. 
 
 ### Outputs
 
@@ -66,4 +68,83 @@ In this version there has no output for top level action resides in the componen
 
 The description of the component testing (i.e., input files required for both CDEPS and model component and namelist files) is defined via set of YAML files. In this case, test could have following YAML files,
 
-* Top-level YAML file for driver
+##### Top-level YAML file for driver
+
+```yaml
+components:
+  drv:
+    runseq:
+      dt: 
+        values: 360
+      compA-to-compB:
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+      compB-to-compA: 
+        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+      compA:
+      compB:
+    input:
+      field_table:
+        protocol: wget
+        end_point: 'https://raw.githubusercontent.com'
+        files:
+          - /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+    config:
+      nuopc:
+        name: esmxRun.config
+        content:
+          ESMX_attributes:
+            Verbosity:
+              values: high
+          ALLCOMP_attributes:
+            case_name:
+              values: comp.test
+            stop_n: 
+              values: 1
+            stop_option: 
+              values: ndays
+            stop_tod: 
+              values: 0
+            stop_ymd: 
+              values: -999
+            restart_n: 
+              values: 1
+            restart_option: 
+              values: never
+            restart_ymd: 
+              values: -999
+          no_group:
+            ESMX_component_list:
+              values: COMPA COMPB
+            startTime:
+              values: '2000-01-01T00:00:00'
+            stopTime:
+              values: '2000-01-02T00:00:00'
+            logKindFlag:
+              values: ESMF_LOGKIND_MULTI
+            globalResourceControl:
+              values: .true.
+            ESMX_log_flush:
+              values: .true.
+            ESMX_field_dictionary: 
+              values: fd.yaml
+    
+  compA: compA.yaml
+  compB: compB.yaml
+```
+
+The top level driver `.yml` file includes information about [NUOPC run sequence](http://earthsystemmodeling.org/docs/release/latest/NUOPC_refdoc/node4.html#SECTION000411300000000000000), input files such as [NUOPC field dictionary](http://earthsystemmodeling.org/docs/release/latest/NUOPC_refdoc/node3.html#SECTION00032000000000000000), ESMX driver specific namelist file and its content and pointer for component specific `.yml` files.
+
+* `runseq` - This section defines the NUOPC run sequence to run the components and interaction among them. `dt` is used to define coupling interval (in seconds). The rest of the content of this section is used to define the run sequence. The unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq` part ensures the bit-to-bit reproducabilty for sipecified interpolation type, which is defined as `bilinear` in this example.
+
+* `input` - This section defines the set of inputs that are required for the driver. There could be multiple entries under this section. For example, `field_table` section basically downloads NUOPC field dictionary from UFS Weather Model repository using `wget` command. The [Python script](https://github.com/uturuncoglu/nuopc-comp-testing/blob/main/scripts/get_input.py) that is used to download data also supports other protocols such as `ftp`, `wget`, `s3` and `s3cli`. The optional `target_directory` argument also enable to specify target directory (both absolute and realtive paths are supported) for the retrieved data. 
+
+* `config` - This section mainly used to create namelist files. It supports multiple formats: (1) Standard Fortran namelist (`nml:`)  and, (2) ESMF config (`nuopc:`) format
+   
+   - `name:` This section basically defines the name of the namelist file and if any other `.yml` file (driver or component ones) has section with same file name, then the content are appended to the existing namelist file. With this approach, each component could append their component specific namelist options for example top level driver ESMF config file.
+   
+   - `content:` This section mainly includes the content of the namelist file and uses format defined by the ParamGen tool. It is also possible to overwrite the content of this section by defining environment variable with the same name. To that end, the same file can be used for different application by changing set of namelist variables on-the-fly. 
+   
+> **Note**
+> It is also possible to add multiple namelist files in same format by modifying namelist tag as `nuopc1:`, `nuopc2:` etc.
+
+* `comp*` - This section defines the pointers for component model (incl. CDEPS) specific `.yml` files. The underlying infrastructure follow the file defined in here and read with the YAML parser to include the information defined in those files into internal Python dictionary that is used to parse information and perfrom the different operations. 
