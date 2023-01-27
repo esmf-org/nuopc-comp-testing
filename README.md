@@ -66,7 +66,7 @@ In this version there has no output for top level action resides in the componen
 
 #### Describing configuration of component testing through using YAML specification
 
-The description of the component testing (i.e., input files required for both CDEPS and model component and namelist files) is defined via set of YAML files. In this case, test could have following YAML files,
+The description of the component testing is defined via set of YAML files. The [Noah-MP land model](https://github.com/NOAA-EMC/noahmp) example will be used in the rest of the document to give brief introduction about the YAML files, their structures and building GitHub Action to test the component . 
 
 ##### Top-level YAML file for driver
 
@@ -145,8 +145,155 @@ The top level driver `.yml` file includes information about [NUOPC run sequence]
    - `content:` This section mainly includes the content of the namelist file and uses format defined by the ParamGen tool. It is also possible to overwrite the content of this section by defining environment variable with the same name. To that end, the same file can be used for different application by changing set of namelist variables on-the-fly. 
    
 > **Note**
-> It is also possible to add multiple namelist files in same format by modifying namelist tag as `nuopc1:`, `nuopc2:` etc.
+> It is also possible to add multiple namelist files in the same format by modifying namelist tag as `nuopc1:`, `nuopc2:` etc.
 
 * `comp*` - This section defines the pointers for component model (incl. CDEPS) specific `.yml` files. The underlying infrastructure follow the file defined in here and read with the YAML parser to include the information defined in those files into internal Python dictionary that is used to parse information and perfrom the different operations. 
 
 ##### YAML files for model components
+
+**compA.yaml**
+
+```yaml
+---
+input:
+  fixed:
+    protocol: s3
+    end_point: noaa-ufs-regtests-pds
+    files:
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.maximum_snow_albedo.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.slope_type.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_greenness.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.vegetation_type.tile6.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile1.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile2.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile3.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile4.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile5.nc
+      - input-data-20221101/FV3_input_data/INPUT/C96_grid.tile6.nc
+      - input-data-20221101/FV3_input_data/INPUT/grid_spec.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile1.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile2.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile3.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile4.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile5.nc
+      - input-data-20221101/FV3_input_data/INPUT/oro_data.tile6.nc    
+    target_directory: 'INPUT'
+  ic:
+    protocol: wget
+    end_point: 'https://raw.githubusercontent.com'
+    files:
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile1.nc
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile2.nc
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile3.nc
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile4.nc
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile5.nc
+      - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile6.nc
+    target_directory: 'INPUT'
+config:
+  nuopc:
+    name: esmxRun.config
+    content: 
+      no_group:
+        LND_model:
+          values: noahmp
+        LND_petlist: 
+          values: 0-5
+      LND_attributes:
+        Verbosity:
+          values: 0
+        Diagnostic:
+          values: 0
+        mosaic_file:
+          values: INPUT/grid_spec.nc
+        input_dir:
+          values: INPUT/
+        ic_type:
+          values: custom
+        num_soil_levels:
+          values: 4
+        forcing_height:
+          values: 10
+        soil_level_thickness:
+          values: 0.10:0.30:0.60:1.00
+        soil_level_nodes:
+          values: 0.05:0.25:0.70:1.50
+        dynamic_vegetation_option:
+          values: 4
+        canopy_stomatal_resistance_option:
+          values: 2
+        soil_wetness_option:
+          values: 1
+        runoff_option:
+          values: 1
+        surface_exchange_option:
+          values: 3
+        supercooled_soilwater_option:
+          values: 1
+        frozen_soil_adjust_option:
+          values: 1
+        radiative_transfer_option:
+          values: 3
+        snow_albedo_option:
+          values: 1
+        precip_partition_option:
+          values: 4
+        soil_temp_lower_bdy_option:
+          values: 2
+        soil_temp_time_scheme_option:
+          values: 3
+        surface_evap_resistance_option:
+          values: 1
+        glacier_option:
+          values: 1
+        surface_thermal_roughness_option:
+          values: 2
+        output_freq:
+          values: 10800
+        has_export:
+          values: .false.
+  nml:
+    name: input.nml
+    content:
+      fms_nml:
+        clock_grain:
+          values: "'ROUTINE'"
+        clock_flags:
+          values: "'NONE'"
+        domains_stack_size:
+          values: 5000000
+        stack_size:
+          values: 0
+```
+
