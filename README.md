@@ -68,6 +68,84 @@ In this version there has no output for top level action resides in the componen
 
 The description of the component testing is defined via set of YAML files. The [Noah-MP land model](https://github.com/NOAA-EMC/noahmp) example will be used in the rest of the document to give brief introduction about the YAML files, their structures and building GitHub Action to test the component . 
 
+##### GitHub Action for component testing (.github/workflows/datm_noahmp.yaml)
+
+```yaml
+name: test_datm_lnd
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches: [ develop ]
+  schedule:
+    - cron: '0 0 * * MON'
+    - cron: '0 0 * * FRI'
+  workflow_dispatch:
+  
+jobs:
+  latest-stable:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+        test: [test_datm_lnd]
+    
+    env:
+      # set token to access gh command
+      GH_TOKEN: ${{ github.token }}
+      # installation location for application
+      APP_INSTALL_DIR: ${{ github.workspace }}/app 
+      # installation location for dependencies
+      DEP_INSTALL_DIR: ~/.spack-ci
+      # option for retention period for artifacts, default is 90 days
+      ARTIFACTS_RETENTION_PERIOD: 2
+
+    steps:
+      # test component
+      - name: Test Component
+        uses: uturuncoglu/nuopc-comp-testing@main 
+        with:
+          app_install_dir: ${{ env.APP_INSTALL_DIR }}
+          artifacts_files: |
+            ${{ env.APP_INSTALL_DIR }}/run/PET*
+            ${{ env.APP_INSTALL_DIR }}/run/*.txt
+            ${{ env.APP_INSTALL_DIR }}/run/*.log  
+            ${{ env.APP_INSTALL_DIR }}/run/comp.test.lnd.out.2000-01-01-75600.*
+          baseline_files: |
+            ${{ env.APP_INSTALL_DIR }}/run/comp.test.*.nc
+          cache_input_file_list: |
+            ${{ env.APP_INSTALL_DIR }}/run/INPUT
+            ${{ env.APP_INSTALL_DIR }}/run/fd_nems.yaml
+          component_build: |
+            export PATH=${{ env.DEP_INSTALL_DIR }}/view/bin:$PATH
+            export ESMFMKFILE=${{ env.DEP_INSTALL_DIR }}/view/lib/esmf.mk
+            export NetCDF_ROOT=${{ env.DEP_INSTALL_DIR }}/view
+            export FC=gfortran
+            cd ${{ env.APP_INSTALL_DIR }}/noahmp
+            mkdir build
+            cd build
+            cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} -DOPENMP=ON ../
+            make
+            make install
+          component_module_name: lnd_comp_nuopc
+          data_component_name: datm
+          dependencies: |
+            zlib@1.2.12
+            fms@2022.04
+            esmf@8.4.0b15+parallelio
+            parallelio@2.5.8+pnetcdf
+          dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
+          test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
+```
+
+The GitHub Action will run when: (1)  direct push to `develop` branch, (2) pull request to `develop` branch and, (3) scheduled on Monday and Friday (required to prevent auto-removing cache entries after 7-days and only runs for default branch) and, (4) manually triggered.
+
+The action includes single test called as `test_datm_lnd` but it is also possible to define series of test using different YAML file for test configuration.
+ 
 ##### Top-level YAML file for driver (.github/workflows/tests/test_datm_lnd.yaml)
 
 ```yaml
@@ -462,5 +540,3 @@ Similar to land component specific YAML file, CDEPS file also includes sections 
 
 > **Note**
 > The YAML file defines two different namelist file in ESMF config format: `nuopc1` for `esmxRun.config` and `nuopc2` for `datm.streams`.
-
-##### GitHub Action for component testing
