@@ -68,20 +68,20 @@ In this version there has no output for top level action resides in the componen
 
 The description of the component testing is defined via set of YAML files. The [Noah-MP land model](https://github.com/NOAA-EMC/noahmp) example will be used in the rest of the document to give brief introduction about the YAML files, their structures and building GitHub Action to test the component . 
 
-##### Top-level YAML file for driver
+##### Top-level YAML file for driver (.github/workflows/tests/test_datm_lnd.yaml)
 
 ```yaml
 components:
   drv:
     runseq:
       dt: 
-        values: 360
-      compA-to-compB:
+        values: 3600
+      lnd-to-atm:
         values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      compB-to-compA: 
+      atm-to-lnd: 
         values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      compA:
-      compB:
+      atm:
+      lnd:
     input:
       field_table:
         protocol: wget
@@ -128,8 +128,9 @@ components:
             ESMX_field_dictionary: 
               values: fd.yaml
     
-  compA: compA.yaml
-  compB: compB.yaml
+  lnd: test_datm_lnd/lnd.yaml
+
+  atm: test_datm_lnd/datm.yaml
 ```
 
 The top level driver `.yml` file includes information about [NUOPC run sequence](http://earthsystemmodeling.org/docs/release/latest/NUOPC_refdoc/node4.html#SECTION000411300000000000000), input files such as [NUOPC field dictionary](http://earthsystemmodeling.org/docs/release/latest/NUOPC_refdoc/node3.html#SECTION00032000000000000000), ESMX driver specific namelist file and its content and pointer for component specific `.yml` files.
@@ -151,7 +152,7 @@ The top level driver `.yml` file includes information about [NUOPC run sequence]
 
 ##### YAML files for model components
 
-**compA.yaml**
+##### .github/workflows/test_datm_lnd/lnd.yaml
 
 ```yaml
 ---
@@ -297,3 +298,169 @@ config:
           values: 0
 ```
 
+The land component specific `.yml` file includes component specific information such as required input and configuration files. As it can be seen, the file includes to main section: (1) input and (2) configuration files related. In input file section, the static information for the land component is retrieved from NOAA UFS Weather Model provided [Amazon S3 bucket](https://registry.opendata.aws/noaa-ufs-regtests/). On the other hand, the initial condition data is stored in the component repository under `.github/workflows/data/` folder and retrieved via `wget` command. In this case, all the data files will be downloaded to `INPUT` directory (relative to `github.workspace }}/app/`), which is specified by the `target_directory:` entry.
+
+Besides of input files, the YAML file also includes set of namelist options (in `config:` section). In this case, two namelist file will be created: (1) `esmxRun.config` and (2) `input.nml`. If the namelist file exists, then the configuration options will be appended to the existing file (`name:` is used to specify the namelist file name).
+
+##### .github/workflows/test_datm_lnd/datm.yaml
+
+```yaml
+---
+input:
+  forcing:
+    protocol: wget
+    end_point: 'https://svn-ccsm-inputdata.cgd.ucar.edu'
+    files:
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Precip/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/Solar/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/TPHWL/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc
+      - /trunk/inputdata/atm/datm7/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc
+      - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.25_USGS_070110_stream_c151201.nc
+      - /trunk/inputdata/atm/datm7/topo_forcing/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+      - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+    target_directory: 'INPUT'
+config:
+  nuopc1:
+    name: esmxRun.config
+    content: 
+      no_group:
+        ATM_model:
+          values: datm
+        ATM_petlist:
+          values: 0-5
+      ATM_attributes:
+        Verbosity:
+          values: 0
+        Diagnostic:
+          values: 0
+        read_restart:
+          values: .false.
+        orb_eccen:
+          values: 1.e36
+        orb_iyear:
+          values: 2000
+        orb_iyear_align:
+          values: 2000
+        orb_mode: 
+          values: fixed_year
+        orb_mvelp: 
+          values: 1.e36
+        orb_obliq: 
+          values: 1.e36
+        ScalarFieldCount: 
+          values: 3
+        ScalarFieldIdxGridNX: 
+          values: 1
+        ScalarFieldIdxGridNY: 
+          values: 2
+        ScalarFieldIdxNextSwCday: 
+          values: 3
+        ScalarFieldName: 
+          values: cpl_scalars
+        case_name:
+          values: comp.test
+        stop_n:
+          values: 1
+        stop_option:
+          values: ndays
+        stop_tod:
+          values: 0
+        stop_ymd:
+          values: -999
+        restart_n:
+          values: 1
+        restart_option:
+          values: never
+        restart_ymd:
+          values: -999
+  nuopc2:
+    name: datm.streams
+    content:
+      no_group:
+        stream_info:
+          values:
+            - CLMGSWP3v1.Solar01
+            - CLMGSWP3v1.Precip02
+            - CLMGSWP3v1.TPQW03
+            - topo.observed04
+        taxmode:
+          values: limit, limit, limit, cycle
+        mapalgo:
+          values: bilinear, bilinear, bilinear, bilinear
+        tInterpAlgo:
+          values: coszen, nearest, linear, lower
+        readMode:
+          values: single, single, single, single
+        dtlimit:
+          values: 1.5, 1.5, 1.5, 1.5
+        stream_offset:
+          values: 0, 0, 0, 0
+        yearFirst: 
+          values: 1999, 1999, 1999, 1
+        yearLast:
+          values: 2000, 2000, 2000, 1
+        yearAlign:
+          values: 1999, 1999, 1999, 1
+        stream_vectors:
+          values: null, null, null, null
+        stream_mesh_file:
+          values: |
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.SCRIP.210520_ESMFmesh.nc,
+            INPUT/topodata_0.9x1.SCRIP.210520_ESMFmesh.nc
+        stream_lev_dimname:
+          values: null, null, null, null
+        stream_data_files:
+          values: |
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Solr.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Solr.2000-01.nc",
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Prec.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.Prec.2000-01.nc",
+            "INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.1999-12.nc" "INPUT/clmforc.GSWP3.c2011.0.5x0.5.TPQWL.2000-01.nc",
+            "INPUT/topodata_0.9x1.25_USGS_070110_stream_c151201.nc"
+        stream_data_variables:
+          values: |
+            "FSDS Faxa_swdn",
+            "PRECTmms Faxa_precn",
+            "TBOT Sa_tbot" "WIND Sa_wind" "QBOT Sa_shum" "PSRF Sa_pbot" "PSRF Sa_pslv" "FLDS Faxa_lwdn",
+            "TOPO Sa_topo"
+  nml:
+    name: datm_in
+    content:
+      datm_nml:
+        datamode: 
+          values: '"CLMNCEP"'
+        factorfn_data:
+          values: '"null"'
+        factorfn_mesh:
+          values: '"null"'
+        flds_co2:
+          values: .false.
+        flds_presaero:
+          values: .false.
+        flds_wiso:
+          values: .false.
+        iradsw:
+          values: 1
+        model_maskfile:
+          values: '"INPUT/fv1.9x2.5_141008_ESMFmesh.nc"'
+        model_meshfile:
+          values: '"INPUT/fv1.9x2.5_141008_ESMFmesh.nc"'
+        nx_global:
+          values: 144
+        ny_global:
+          values: 96
+        restfilm:
+          values: '"null"'
+        export_all:
+          values: .true.
+```
+
+Similar to land component specific YAML file, CDEPS file also includes sections for input and namelist files. As it can be seen from the example YAML file, the configuration uses `datm` data component and `CLMNCEP` data mode, which provides GSWP3 forcing to land component.
+
+> **Note**
+> The YAML file defines two different namelist file in ESMF config format: `nuopc1` for `esmxRun.config` and `nuopc2` for `datm.streams`.
+
+##### GitHub Action for component testing
