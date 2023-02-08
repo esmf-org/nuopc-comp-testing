@@ -98,7 +98,7 @@ jobs:
       # set token to access gh command
       GH_TOKEN: ${{ github.token }}
       # installation location for application
-      APP_INSTALL_DIR: ${{ github.workspace }}/app 
+      APP_INSTALL_DIR: ${{ github.workspace }}/app
       # installation location for dependencies
       DEP_INSTALL_DIR: ~/.spack-ci
       # option for retention period for artifacts, default is 90 days
@@ -107,13 +107,13 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: uturuncoglu/nuopc-comp-testing@main 
+        uses: esmf-org/nuopc-comp-testing@v1.0.0 
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
           artifacts_files: |
             ${{ env.APP_INSTALL_DIR }}/run/PET*
             ${{ env.APP_INSTALL_DIR }}/run/*.txt
-            ${{ env.APP_INSTALL_DIR }}/run/*.log  
+            ${{ env.APP_INSTALL_DIR }}/run/*.log
             ${{ env.APP_INSTALL_DIR }}/run/comp.test.lnd.out.2000-01-01-75600.*
           baseline_files: |
             ${{ env.APP_INSTALL_DIR }}/run/comp.test.*.nc
