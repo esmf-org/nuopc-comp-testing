@@ -12,6 +12,7 @@ import collections
 import hashlib
 import ftplib
 import boto3
+import botocore.exceptions
 from botocore import UNSIGNED
 from botocore.client import Config
 
