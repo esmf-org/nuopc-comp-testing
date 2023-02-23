@@ -181,7 +181,7 @@ runs:
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
         mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        if [ $? -ne 0 ]; then.
+        if [ $? -ne 0 ]; then
           echo "Component did not run successfully! Partial output from PET log files: "
           tail -n 50 PET*
         fi
