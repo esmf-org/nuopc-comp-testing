@@ -14,6 +14,10 @@ inputs:
     description: list of files that will be pushed to artifacts
     required: false
     default: None 
+  artifacts_name:
+    description: artifact name
+    required: false
+    default: artifacts for ${{ github.workflow }}
   artifacts_retention_period:
     description: custom retention period for individual artifacts
     required: false
@@ -191,7 +195,7 @@ runs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: artifacts for ${{ github.workflow }}
+        name: ${{ inputs.artifacts_name }}
         path: ${{ inputs.artifacts_files }}
         retention-days: ${{ inputs.artifacts_retention_period }}
 
