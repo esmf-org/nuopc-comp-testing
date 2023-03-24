@@ -27,6 +27,7 @@ The action mainly includes following features:
 * Artifacts name can be given as an argument. This is expecially useful for settin up GitHub Action matrix.
 * Minor fix is applied to `get_input.py` script to find `botocore.exceptions`.
 * The run step is modified to output ESMF PET logs in case of error in the component testing.
+* Default `architecture` is changed from `x86_64_v4` to `x86_64` to make it more generic.
 
 ## Usage
 
@@ -41,7 +42,7 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 ### Inputs
 
 * `app_install_dir` - An optional path of installation directory for test configuration. The default value is set to `${{ github.workspace }}/app`.
-* `architecture` - An optional value for Spack target architecture. The default value is set to `x86_64_v4`.
+* `architecture` - An optional value for Spack target architecture. The default value is set to `x86_64`.
 * `artifacts_files` - A optional list of files, directories, and wildcard patterns to save specified files as artifacts. The default value is set to `None` and the action will not save any artifacts after action ends.
 * `artifacts_name` - A optional string for artifact name. This is expecially useful for using matix in the component GitHub Action. The default value is set to `artifacts for ${{ github.workflow }}`.
 * `artifacts_retention_period` - An optional number to specify artifacts retention period. The default value is set to 2-days.
