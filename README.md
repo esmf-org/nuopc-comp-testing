@@ -22,11 +22,12 @@ The action mainly includes following features:
 
 ## What's New
 
-### v1
+### v1.1
 
-* Added caching support for dependency installations, inputs and baseline
-* Added support to use `Baseline Change` label for PRs to pass baseline checking against the existing one
-* Both driver and component could have multiple `input` section in test definition `.yml` files 
+* Artifacts name can be given as an argument. This is expecially useful for settin up GitHub Action matrix.
+* Minor fix is applied to `get_input.py` script to find `botocore.exceptions`.
+* The run step is modified to output ESMF PET logs in case of error in the component testing.
+* Default `architecture` is changed from `x86_64_v4` to `x86_64` to make it more generic.
 
 ## Usage
 
@@ -41,8 +42,9 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 ### Inputs
 
 * `app_install_dir` - An optional path of installation directory for test configuration. The default value is set to `${{ github.workspace }}/app`.
-* `architecture` - An optional value for Spack target architecture. The default value is set to `x86_64_v4`.
+* `architecture` - An optional value for Spack target architecture. The default value is set to `x86_64`.
 * `artifacts_files` - A optional list of files, directories, and wildcard patterns to save specified files as artifacts. The default value is set to `None` and the action will not save any artifacts after action ends.
+* `artifacts_name` - A optional string for artifact name. This is expecially useful for using matix in the component GitHub Action. The default value is set to `artifacts for ${{ github.workflow }}`.
 * `artifacts_retention_period` - An optional number to specify artifacts retention period. The default value is set to 2-days.
 * `baseline_files` - A optional list of files, directories, and wildcard patterns to be used as a baseline. The default value is set to `None` and the action will not create baseline to check it in later runs.
 * `cache_input_file_list` - A optional list of files, directories, and wildcard patterns to cache input files. The default value is set to `None`.
@@ -93,6 +95,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
+        esmf: [develop, 8.5.0b10]
     
     env:
       # set token to access gh command
@@ -107,9 +110,10 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: esmf-org/nuopc-comp-testing@v1.0.0 
+        uses: esmf-org/nuopc-comp-testing@v1.1.0
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
+          artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} esmf@${{ matrix.esmf }}
           artifacts_files: |
             ${{ env.APP_INSTALL_DIR }}/run/PET*
             ${{ env.APP_INSTALL_DIR }}/run/*.txt
@@ -128,16 +132,15 @@ jobs:
             cd ${{ env.APP_INSTALL_DIR }}/noahmp
             mkdir build
             cd build
-            cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} -DOPENMP=ON ../
+            cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} ../
             make
             make install
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
             zlib@1.2.12
-            fms@2022.04
-            esmf@8.4.0b15+parallelio
-            parallelio@2.5.8+pnetcdf
+            esmf@${{ matrix.esmf }}+parallelio~xerces~pnetcdf
+            parallelio@2.5.10+pnetcdf
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
 ```
@@ -145,6 +148,8 @@ jobs:
 The GitHub Action will run when: (1) direct push to `develop` branch, (2) pull request to `develop` branch and, (3) scheduled on Monday and Friday (required to prevent auto-removing cache entries after 7-days and only runs for default branch) and (4) manually triggered.
 
 The action includes single test called as `test_datm_lnd` but it is also possible to define series of test using different YAML file for test configuration.
+
+The action test the component against two different version of ESMF library (develop branch and 8.5.0b10 tag) as seperate jobs. 
  
 ##### Top-level YAML file for driver (.github/workflows/tests/test_datm_lnd.yaml)
 
