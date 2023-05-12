@@ -76,6 +76,7 @@ runs:
 
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
+      if: failure()
       run: |
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
@@ -87,6 +88,7 @@ runs:
     # restore dependencies from cache
     - name: Restore Dependencies
       uses: actions/cache@v3
+      if: failure()
       with:
         path: ${{ inputs.dependencies_install_dir }} 
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
@@ -95,6 +97,7 @@ runs:
 
     # install dependencies
     - name: Install Dependencies with Spack 
+      if: failure()
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -i ${{ inputs.dependencies_install_dir }} \
@@ -104,6 +107,7 @@ runs:
     # checkout data models
     - name: Checkout CDEPS
       uses: actions/checkout@v3
+      if: failure()
       with:
         repository: uturuncoglu/CDEPS
         path: ${{ inputs.app_install_dir }}/cdeps
@@ -111,6 +115,7 @@ runs:
 
     # build and install data models
     - name: Build and Install CDEPS
+      if: failure()
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export ESMFMKFILE=${{ inputs.dependencies_install_dir }}/view/lib/esmf.mk
@@ -131,6 +136,7 @@ runs:
 
     # build component
     - name: Build and Install Component
+      if: failure()
       run: |
         cd ${{ inputs.app_install_dir }}
         echo "${{ inputs.component_build }}" >> install_comp.sh
@@ -140,6 +146,7 @@ runs:
 
     # use ESMX generic driver and create executable
     - name: Use ESMX to create executable
+      if: failure()
       run: |
         $GITHUB_ACTION_PATH/scripts/create_exe.sh \
           -a ${{ inputs.app_install_dir }} \
@@ -152,6 +159,7 @@ runs:
     # restore input files from cache
     - name: Restore Input Files From Cache
       uses: actions/cache@v3
+      if: failure()
       with:
         path: ${{ inputs.cache_input_file_list }}
         key: input-
@@ -161,6 +169,7 @@ runs:
     # create run directory and download input
     # no need to check the cache hit since script is able to check the existing files and not download again
     - name: Download Input Files
+      if: failure()
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         export PYTHONPATH=~/.local:$PYTHONPATH
@@ -173,6 +182,7 @@ runs:
 
     # generate configuration files
     - name: Generate Configuration Files
+      if: failure()
       run: |
         export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
         export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
@@ -182,6 +192,7 @@ runs:
 
     # run application
     - name: Run Application
+      if: failure()
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
@@ -189,12 +200,14 @@ runs:
         if [ $? -ne 0 ]; then
           echo "Component did not run successfully! Partial output from PET log files: "
           tail -n 50 PET*
+          exit $?
         fi
       shell: bash {0}
 
     # upload model artifacts to check it later
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
+      if: failure()
       with:
         name: ${{ inputs.artifacts_name }}
         path: ${{ inputs.artifacts_files }}
@@ -202,6 +215,7 @@ runs:
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
+      if: failure()
       run: |
         # get date for old baseline
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
@@ -219,6 +233,7 @@ runs:
 
     # calculate hashes
     - name: Calculate Hashes of Output Files and Query Baseline Date
+      if: failure()
       run: |
         # get current baseline date
         BL_DATE_OLD=${{ env.BL_DATE_OLD }}
@@ -256,6 +271,7 @@ runs:
     # restore baseline hash file and files from cache
     - name: Restore Baseline Hash File From Cache
       uses: actions/cache@v3
+      if: failure()
       with:
         path: |
           ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
@@ -265,6 +281,7 @@ runs:
 
     # compare with the baseline
     - name: Compare with Baseline or Create New One
+      if: failure()
       run: |
         cd ${{ inputs.app_install_dir }}/run
         # compare against the baseline, returns false if it does not match
@@ -286,6 +303,7 @@ runs:
 
     # Force to fail if the results are not matched with the baseline
     - name: Result of Baseline Check
+      if: failure()
       run: |
         if [[ "${{ env.CHECK_RESULT }}" == "false" ]]; then
           echo "The results do not match with the baseline!"

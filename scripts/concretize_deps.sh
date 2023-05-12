@@ -30,7 +30,7 @@ if [[ -z "$run_dir" || ! -z `echo $run_dir | grep '^-'` ]]; then
 fi
 
 if [[ -z "$arch" || ! -z `echo $arch | grep '^-'` ]]; then
-  arch="x86_64_v4"
+  arch="x86_64"
 fi
 
 # print out arguments
@@ -45,9 +45,6 @@ cd $run_dir
 # checkout spack
 echo "::group::Checkout Spack"
 git clone https://github.com/spack/spack.git
-cd spack
-git checkout 15f7b72557a9c56d66327daf49284fc22cb4bc8d
-cd -
 echo "::endgroup::"
 
 # create spack.yaml
