@@ -97,6 +97,7 @@ runs:
     - name: Install Dependencies with Spack 
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
+          -i ${{ inputs.dependencies_install_dir }} \
           -r $GITHUB_WORKSPACE
       shell: bash
 

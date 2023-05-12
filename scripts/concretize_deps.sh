@@ -44,7 +44,10 @@ cd $run_dir
 
 # checkout spack
 echo "::group::Checkout Spack"
-git clone -b jcsda_emc_spack_stack https://github.com/NOAA-EMC/spack.git
+git clone https://github.com/spack/spack.git
+cd spack
+git checkout 15f7b72557a9c56d66327daf49284fc22cb4bc8d
+cd -
 echo "::endgroup::"
 
 # create spack.yaml
