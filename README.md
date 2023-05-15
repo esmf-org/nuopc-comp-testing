@@ -22,12 +22,12 @@ The action mainly includes following features:
 
 ## What's New
 
-### v1.1
+### v1.2
 
-* Artifacts name can be given as an argument. This is expecially useful for settin up GitHub Action matrix.
-* Minor fix is applied to `get_input.py` script to find `botocore.exceptions`.
-* The run step is modified to output ESMF PET logs in case of error in the component testing.
-* Default `architecture` is changed from `x86_64_v4` to `x86_64` to make it more generic.
+* The extra `mpirun` arguments now need to be passed with `mpirun_arg` input.
+* Now uses authoritative [Spack repository](https://github.com/spack/spack.git).
+* Spack now uses `curl` to download packages and timeout limit is increased to 60 s to prevent fetching issues
+* Spack now uses system installed packages (`spack external find`).
 
 ## Usage
 
@@ -54,6 +54,7 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 * `data_component_name` - The optional name of data component that will be used to force the component. The valid values are `datm` (default), `dice`, `dlnd`, `docn`, `drof` and `dwav`. It would be a part of the user provided YAML files in the future.
 * `dependencies` - The list of dependencies that are used to build the application. Since Spack is used to install dependencies, the given packages need to be part of the Spack distribution. The list of packages can be seen in [here](https://packages.spack.io). The ESMF package (`esmf@8.4.0b15+parallelio`) needs to be added to the list. 
 * `dependencies_install_dir` - An optional path of installation directory for dependencies. The default value is set to `~/.spack-ci`.
+* `mpirun_arg` - The required argument to be passed to `mpirun` command. For example `--oversubscribe -np 6 --mca btl_tcp_if_include eth0` can be passed to run test case on 6 processor (`--oversubscribe` is required for the jobs that needs to be run more then 2 processor and `--mca btl_tcp_if_include eth0` is required to overcome hanging issue of collective communication under GitHub runners).
 * `test_definition` - The top level YAML file that describes the test. This is required.
 
 #### Environment Variables
@@ -110,7 +111,7 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: esmf-org/nuopc-comp-testing@v1.1.0
+        uses: esmf-org/nuopc-comp-testing@v1.2.0
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
           artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} esmf@${{ matrix.esmf }}
@@ -138,10 +139,9 @@ jobs:
           component_module_name: lnd_comp_nuopc
           data_component_name: datm
           dependencies: |
-            zlib@1.2.12
-            esmf@${{ matrix.esmf }}+parallelio~xerces~pnetcdf
-            parallelio@2.5.10+pnetcdf
+            esmf@${{ matrix.esmf }}+external-parallelio
           dependencies_install_dir: ${{ env.DEP_INSTALL_DIR }}
+          mpirun_args: --oversubscribe -np 6 --mca btl_tcp_if_include eth0
           test_definition: ${{ env.APP_INSTALL_DIR }}/noahmp/.github/workflows/tests/${{ matrix.test }}.yaml
 ```
 
