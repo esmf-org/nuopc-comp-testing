@@ -44,6 +44,15 @@ def recv_files(_dict, fhash, force_download):
             else:
                 sys.exit('Files are not listed for component {} and section {}!'.format(k1, k2))
 
+            if 'force' in v2:
+                force = v2['force']
+            else:
+                force = False
+
+            # overwrite force download using YAML
+            if force:
+                force_download = True
+
             # save current directory
             current_dir = os.getcwd()
 
