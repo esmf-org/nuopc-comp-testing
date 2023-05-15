@@ -52,6 +52,7 @@ def recv_files(_dict, fhash, force_download):
             # overwrite force download using YAML
             if force:
                 force_download = True
+                print('Force download of {}!'.format(files))
 
             # save current directory
             current_dir = os.getcwd()
