@@ -47,6 +47,10 @@ inputs:
     description: data component name
     required: false
     default: datm
+  debug:
+    description: enable debug capability
+    required: false
+    default: OFF
   dependencies:
     description: list of packages to install
     required: true
@@ -198,7 +202,9 @@ runs:
         python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
       shell: bash
 
-    - name: Setup tmate session
+    # used to debug run and allow ssh just before running the model
+    - name: Setup tmate session to allow ssh connection
+      if: ${{ inputs.debug == 'ON' }}
       uses: mxschmitt/action-tmate@v3
 
     # run application
