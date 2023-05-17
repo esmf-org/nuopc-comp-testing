@@ -198,6 +198,9 @@ runs:
         python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
       shell: bash
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     # run application
     - name: Run Application
       if: ${{ success() }}
