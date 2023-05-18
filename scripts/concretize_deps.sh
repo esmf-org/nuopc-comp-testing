@@ -51,11 +51,15 @@ cd $run_dir
 # checkout spack and setup to use it
 echo "::group::Checkout Spack"
 git clone https://github.com/spack/spack.git
+# checkout specific version of spack beacuse https://github.com/spack/spack/pull/37438
+# introduces a bug that prevents to install package tags that are not included package.py
+cd spack
+git checkout b2c3973 
+cd -
 . spack/share/spack/setup-env.sh
 echo "::endgroup::"
 
 # find compilers
-. spack/share/spack/setup-env.sh
 spack compiler find
 cat ~/.spack/linux/compilers.yaml
 echo "::endgroup::"
