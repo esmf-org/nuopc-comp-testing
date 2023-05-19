@@ -28,6 +28,11 @@ cd $run_dir
 echo "::group::Install Spack Packages"
 . spack/share/spack/setup-env.sh
 spack --color always -e $run_dir/. install -j3 --deprecated --no-checksum
+exc=$?
+if [ $exc -ne 0 ]; then
+  echo "Error in installing dependencies! exit code is $exc ..."
+  exit $exc
+fi
 echo "::endgroup::"
 
 # output esmf.mk file for debugging
