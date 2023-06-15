@@ -28,7 +28,7 @@ The action mainly includes following features:
 * A new `debug` argument is added to the action that allow to create ssh connection to the runner for debugging (uses mxschmitt/action-tmate@v3).
 * Now uses authoritative [Spack repository](https://github.com/spack/spack.git).
 * Spack now uses `curl` to download packages and timeout limit is increased to 60 s to prevent fetching issues
-* Spack now uses system installed packages (`spack external find`).
+* Spack now could use system installed packages (`spack external find`).
 
 ## Usage
 
