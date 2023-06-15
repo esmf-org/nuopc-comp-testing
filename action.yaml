@@ -93,7 +93,7 @@ runs:
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a "${{ inputs.architecture }}" \
           -c "${{ inputs.compiler }}" \
-          -d "$(echo ${{ inputs.dependencies }} | sed -z 's/\n/:/g;s/:$//')" \
+          -d "$(echo "${{ inputs.dependencies }}" | sed -z 's/\n/:/g;s/:$//')" \
           -i "${{ inputs.dependencies_install_dir }}" \
           -r "$GITHUB_WORKSPACE"
       shell: bash
