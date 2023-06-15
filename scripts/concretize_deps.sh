@@ -4,11 +4,11 @@
 while getopts a:c:d:i:r: flag
 do
   case "${flag}" in
-    a) arch="${OPTARG}";;
-    c) comp="${OPTARG}";;
+    a) arch=${OPTARG};;
+    c) comp=${OPTARG};;
     d) deps="${OPTARG}";;
-    i) install_dir="${OPTARG}";;
-    r) run_dir="${OPTARG}";;
+    i) install_dir=${OPTARG};;
+    r) run_dir=${OPTARG};;
   esac
 done
 
@@ -69,7 +69,6 @@ echo "      host_compatible: false" >> spack.yaml
 echo "    unify: when_possible" >> spack.yaml
 echo "  specs:" >> spack.yaml
 IFS=':' read -r -a array <<< "$deps"
-echo "${array[@]}"
 for d in "${array[@]}"
 do
   echo "  - $d %$comp target=$arch" >> spack.yaml

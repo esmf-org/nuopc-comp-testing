@@ -90,11 +90,11 @@ runs:
       run: |
         echo "${{ inputs.dependencies }}"
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
-          -a "${{ inputs.architecture }}" \
-          -c "${{ inputs.compiler }}" \
+          -a ${{ inputs.architecture }} \
+          -c ${{ inputs.compiler }} \
           -d "$(echo "${{ inputs.dependencies }}" | sed -z 's/\n/:/g' | sed 's/:$//')" \
-          -i "${{ inputs.dependencies_install_dir }}" \
-          -r "$GITHUB_WORKSPACE"
+          -i ${{ inputs.dependencies_install_dir }} \
+          -r $GITHUB_WORKSPACE
       shell: bash
 
     # restore dependencies from cache
@@ -155,11 +155,11 @@ runs:
     - name: Use ESMX to create executable
       run: |
         $GITHUB_ACTION_PATH/scripts/create_exe.sh \
-          -a "${{ inputs.app_install_dir }}" \
-          -d "${{ inputs.data_component_name }}" \
-          -i "${{ inputs.dependencies_install_dir }}" \
-          -m "${{ inputs.component_name }}" \
-          -n "${{ inputs.component_module_name }}"
+          -a ${{ inputs.app_install_dir }} \
+          -d ${{ inputs.data_component_name }} \
+          -i ${{ inputs.dependencies_install_dir }} \
+          -m ${{ inputs.component_name }} \
+          -n ${{ inputs.component_module_name }}
       shell: bash
 
     # restore input files from cache
