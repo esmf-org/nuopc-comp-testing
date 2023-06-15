@@ -91,7 +91,7 @@ runs:
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
           -c ${{ inputs.compiler }} \
-          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=":") \
           -i ${{ inputs.dependencies_install_dir }} \
           -r $GITHUB_WORKSPACE
       shell: bash
