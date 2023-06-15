@@ -54,7 +54,6 @@ inputs:
   dependencies:
     description: list of packages to install
     required: true
-    type: string
   dependencies_install_dir:
     description: spack dependency installation directory
     required: false

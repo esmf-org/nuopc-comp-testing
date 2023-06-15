@@ -29,6 +29,7 @@ The action mainly includes following features:
 * Now uses authoritative [Spack repository](https://github.com/spack/spack.git).
 * Spack now uses `curl` to download packages and timeout limit is increased to 60 s to prevent fetching issues
 * Spack now could use system installed packages (`spack external find`).
+* Fixed following issue/s: https://github.com/esmf-org/nuopc-comp-testing/issues/2
 
 ## Usage
 
