@@ -4,11 +4,11 @@
 while getopts a:c:d:i:r: flag
 do
   case "${flag}" in
-    a) arch=${OPTARG};;
-    c) comp=${OPTARG};;
-    d) deps=${OPTARG};;
-    i) install_dir=${OPTARG};;
-    r) run_dir=${OPTARG};;
+    a) arch="${OPTARG}";;
+    c) comp="${OPTARG}";;
+    d) deps="${OPTARG}";;
+    i) install_dir="${OPTARG}";;
+    r) run_dir="${OPTARG}";;
   esac
 done
 
