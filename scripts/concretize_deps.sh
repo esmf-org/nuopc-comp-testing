@@ -91,8 +91,6 @@ echo "    install_missing_compilers: true" >> spack.yaml
 cat spack.yaml
 echo "::endgroup::"
 
-exit -1
-
 # find external tools
 echo "::group::Find Externals"
 spack external find
