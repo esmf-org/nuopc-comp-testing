@@ -54,6 +54,7 @@ inputs:
   dependencies:
     description: list of packages to install
     required: true
+    type: string
   dependencies_install_dir:
     description: spack dependency installation directory
     required: false
@@ -88,6 +89,7 @@ runs:
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
       run: |
+        echo "${{ inputs.dependencies }}"
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
           -c ${{ inputs.compiler }} \
