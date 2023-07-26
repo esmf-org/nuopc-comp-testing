@@ -203,11 +203,11 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
-        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx # 2>&1 | tee out_err.txt
+        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx >& out_err.txt
+        cat out_err.txt
         exc=$?
         if [ $exc -ne 0 ]; then
           echo "Component did not run successfully! Partial output from PET log files: "
-          cat out_err.txt
           tail -n 50 PET*
           exit $exc
         fi
