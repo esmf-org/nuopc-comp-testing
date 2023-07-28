@@ -72,6 +72,11 @@ cat esmxBuild.yaml
 
 # create build directory
 cmake -H$ESMF_ESMXDIR -Bbuild
+exc=$?
+if [ $exc -ne 0 ]; then
+  echo "Error when creating executable! exit code is $exc ..."
+  exit $exc
+fi
 
 # compile and create executable
 cd $app_install_dir/build

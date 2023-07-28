@@ -29,6 +29,10 @@ inputs:
   cache_input_file_list:
     description: list of input files that needs to be cached
     required: false
+  compiler:
+    description: compiler that will be used
+    required: false
+    default: gcc@11.3.0
   component_name:
     description: component name
     required: false
@@ -43,6 +47,10 @@ inputs:
     description: data component name
     required: false
     default: datm
+  debug:
+    description: enable debug capability
+    required: false
+    default: OFF
   dependencies:
     description: list of packages to install
     required: true
@@ -50,6 +58,9 @@ inputs:
     description: spack dependency installation directory
     required: false
     default: ~/.spack-ci
+  mpirun_args:
+    description: atguments that will be used in mpirun command
+    required: true
   test_definition:
     description: YAML file that describes the test
     required: true
@@ -77,9 +88,11 @@ runs:
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
       run: |
+        echo "${{ inputs.dependencies }}"
         $GITHUB_ACTION_PATH/scripts/concretize_deps.sh \
           -a ${{ inputs.architecture }} \
-          -d $(echo "${{ inputs.dependencies }}" | awk '$1=$1' RS= OFS=,) \
+          -c ${{ inputs.compiler }} \
+          -d "$(echo "${{ inputs.dependencies }}" | sed -z 's/\n/:/g' | sed 's/:$//')" \
           -i ${{ inputs.dependencies_install_dir }} \
           -r $GITHUB_WORKSPACE
       shell: bash
@@ -97,7 +110,8 @@ runs:
     - name: Install Dependencies with Spack 
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
-          -r $GITHUB_WORKSPACE
+          -i "${{ inputs.dependencies_install_dir }}" \
+          -r "$GITHUB_WORKSPACE"
       shell: bash
 
     # checkout data models
@@ -179,21 +193,30 @@ runs:
         python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
       shell: bash
 
+    # used to debug run and allow ssh just before running the model
+    - name: Setup tmate session to allow ssh connection
+      if: ${{ inputs.debug == 'ON' }}
+      uses: mxschmitt/action-tmate@v3
+
     # run application
     - name: Run Application
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
-        mpirun --oversubscribe -np 6 --allow-run-as-root ${{ inputs.app_install_dir }}/build/esmx 2>&1 | tee out_err.txt
-        if [ $? -ne 0 ]; then
+        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx >& out_err.txt
+        cat out_err.txt
+        exc=$?
+        if [ $exc -ne 0 ]; then
           echo "Component did not run successfully! Partial output from PET log files: "
           tail -n 50 PET*
+          exit $exc
         fi
       shell: bash {0}
 
     # upload model artifacts to check it later
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
+      if: ${{ always() }}
       with:
         name: ${{ inputs.artifacts_name }}
         path: ${{ inputs.artifacts_files }}
