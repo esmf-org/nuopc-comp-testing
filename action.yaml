@@ -118,9 +118,9 @@ runs:
     - name: Checkout CDEPS
       uses: actions/checkout@v3
       with:
-        repository: uturuncoglu/CDEPS
+        repository: ESCOMP/CDEPS
         path: ${{ inputs.app_install_dir }}/cdeps
-        ref: hotfix/std_build
+        ref: main
 
     # build and install data models
     - name: Build and Install CDEPS
@@ -136,7 +136,7 @@ runs:
           -DPIO_C_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
           -DPIO_Fortran_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
           -DPIO_Fortran_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
-          -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz" \
+          -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz -ffree-line-length-512 -DCPRGNU" \
           -DDISABLE_FoX=ON ../
         make
         make install
@@ -203,7 +203,7 @@ runs:
       run: |
         export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
         cd ${{ inputs.app_install_dir }}/run
-        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx >& out_err.txt
+        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx_app >& out_err.txt
         cat out_err.txt
         exc=$?
         if [ $exc -ne 0 ]; then

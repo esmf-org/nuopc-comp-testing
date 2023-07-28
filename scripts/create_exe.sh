@@ -61,17 +61,25 @@ export ESMF_ESMXDIR=$deps_install_dir/view/include/ESMX
 cd $app_install_dir
 
 # create YAML file for build
+echo "application:" >> esmxBuild.yaml
+echo "  disable_comps: ESMX_Data" >> esmxBuild.yaml
+echo "  link_paths: $deps_install_dir/view/lib" >> esmxBuild.yaml 
+echo "  link_libraries: piof" >> esmxBuild.yaml
+echo "" >> esmxBuild.yaml
 echo "components:" >> esmxBuild.yaml
 echo "  $data_comp:" >> esmxBuild.yaml
-echo "    cmake_config: $app_install_dir/lib/cmake/${data_comp}-esmx.cmake" >> esmxBuild.yaml
-echo "    fort_module: cdeps_${data_comp}_comp" >> esmxBuild.yaml
+echo "    build_type: none" >> esmxBuild.yaml
+echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
+echo "    libraries: $data_comp dshr streams cdeps_share" >> esmxBuild.yaml
+echo "    fort_module: cdeps_${data_comp}_comp.mod" >> esmxBuild.yaml
 echo "  $model_comp:" >> esmxBuild.yaml
-echo "    cmake_config: $app_install_dir/lib/cmake/${model_comp}-esmx.cmake" >> esmxBuild.yaml
+echo "    build_type: none" >> esmxBuild.yaml
+echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
 echo "    fort_module: $model_module" >> esmxBuild.yaml
 cat esmxBuild.yaml
 
 # create build directory
-cmake -H$ESMF_ESMXDIR -Bbuild
+ESMX_Builder
 exc=$?
 if [ $exc -ne 0 ]; then
   echo "Error when creating executable! exit code is $exc ..."
