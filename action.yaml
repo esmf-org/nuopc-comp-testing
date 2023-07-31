@@ -151,6 +151,11 @@ runs:
         ./install_comp.sh
       shell: bash
 
+    # used to debug run and allow ssh just before running the model
+    - name: Setup tmate session to allow ssh connection
+      if: ${{ inputs.debug == 'ON' }}
+      uses: mxschmitt/action-tmate@v3
+
     # use ESMX generic driver and create executable
     - name: Use ESMX to create executable
       run: |
