@@ -77,14 +77,14 @@ echo "" >> esmxBuild.yaml
 echo "components:" >> esmxBuild.yaml
 echo "  $data_comp:" >> esmxBuild.yaml
 echo "    build_type: none" >> esmxBuild.yaml
-echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
+#echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
 echo "    library_dir: $app_install_dir/lib" >> esmxBuild.yaml
 echo "    include_dir: $app_install_dir/include" >> esmxBuild.yaml
 echo "    libraries: $data_comp dshr streams cdeps_share" >> esmxBuild.yaml
 echo "    fort_module: cdeps_${data_comp}_comp.mod" >> esmxBuild.yaml
 echo "  $model_comp:" >> esmxBuild.yaml
 echo "    build_type: none" >> esmxBuild.yaml
-echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
+#echo "    install_prefix: $app_install_dir" >> esmxBuild.yaml
 echo "    library_dir: $app_install_dir/lib" >> esmxBuild.yaml
 echo "    include_dir: $app_install_dir/include" >> esmxBuild.yaml
 echo "    fort_module: $model_module" >> esmxBuild.yaml
