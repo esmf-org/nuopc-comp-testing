@@ -153,19 +153,19 @@ runs:
 
     # used to debug run and allow ssh just before running the model
     - name: Setup tmate session to allow ssh connection
-      if: ${{ inputs.debug == 'ON' }}
+      #if: ${{ inputs.debug == 'ON' }}
       uses: mxschmitt/action-tmate@v3
 
     # use ESMX generic driver and create executable
-    - name: Use ESMX to create executable
-      run: |
-        $GITHUB_ACTION_PATH/scripts/create_exe.sh \
-          -a ${{ inputs.app_install_dir }} \
-          -d ${{ inputs.data_component_name }} \
-          -i ${{ inputs.dependencies_install_dir }} \
-          -m ${{ inputs.component_name }} \
-          -n ${{ inputs.component_module_name }}
-      shell: bash
+#    - name: Use ESMX to create executable
+#      run: |
+#        $GITHUB_ACTION_PATH/scripts/create_exe.sh \
+#          -a ${{ inputs.app_install_dir }} \
+#          -d ${{ inputs.data_component_name }} \
+#          -i ${{ inputs.dependencies_install_dir }} \
+#          -m ${{ inputs.component_name }} \
+#          -n ${{ inputs.component_module_name }}
+#      shell: bash
 
 #    # restore input files from cache
 #    - name: Restore Input Files From Cache
