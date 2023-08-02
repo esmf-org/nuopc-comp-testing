@@ -50,7 +50,8 @@ inputs:
   debug:
     description: enable debug capability
     required: false
-    default: OFF
+    type: boolean
+    default: false 
   dependencies:
     description: list of packages to install
     required: true
@@ -151,174 +152,169 @@ runs:
         ./install_comp.sh
       shell: bash
 
+    # use ESMX generic driver and create executable
+    - name: Use ESMX to create executable
+      run: |
+        $GITHUB_ACTION_PATH/scripts/create_exe.sh \
+          -a ${{ inputs.app_install_dir }} \
+          -d ${{ inputs.data_component_name }} \
+          -i ${{ inputs.dependencies_install_dir }} \
+          -m ${{ inputs.component_name }} \
+          -n ${{ inputs.component_module_name }}
+      shell: bash
+
+    # restore input files from cache
+    - name: Restore Input Files From Cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.cache_input_file_list }}
+        key: input-
+        restore-keys: |
+            input
+
+    # create run directory and download input
+    # no need to check the cache hit since script is able to check the existing files and not download again
+    - name: Download Input Files
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        export PYTHONPATH=~/.local:$PYTHONPATH
+        if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
+          mkdir ${{ inputs.app_install_dir }}/run
+        fi
+        cd ${{ inputs.app_install_dir }}/run
+        python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
+      shell: bash
+
+    # generate configuration files
+    - name: Generate Configuration Files
+      run: |
+        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
+        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
+        cd ${{ inputs.app_install_dir }}/run
+        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
+      shell: bash
+
     # used to debug run and allow ssh just before running the model
     - name: Setup tmate session to allow ssh connection
-      #if: ${{ inputs.debug == 'ON' }}
+      if: ${{ inputs.debug == 'true' }} 
       uses: mxschmitt/action-tmate@v3
 
-    # use ESMX generic driver and create executable
-#    - name: Use ESMX to create executable
-#      run: |
-#        $GITHUB_ACTION_PATH/scripts/create_exe.sh \
-#          -a ${{ inputs.app_install_dir }} \
-#          -d ${{ inputs.data_component_name }} \
-#          -i ${{ inputs.dependencies_install_dir }} \
-#          -m ${{ inputs.component_name }} \
-#          -n ${{ inputs.component_module_name }}
-#      shell: bash
+    # run application
+    - name: Run Application
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        cd ${{ inputs.app_install_dir }}/run
+        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx_app >& out_err.txt
+        cat out_err.txt
+        exc=$?
+        if [ $exc -ne 0 ]; then
+          echo "Component did not run successfully! Partial output from PET log files: "
+          tail -n 50 PET*
+          exit $exc
+        fi
+      shell: bash {0}
 
-#    # restore input files from cache
-#    - name: Restore Input Files From Cache
-#      uses: actions/cache@v3
-#      with:
-#        path: ${{ inputs.cache_input_file_list }}
-#        key: input-
-#        restore-keys: |
-#            input
-#
-#    # create run directory and download input
-#    # no need to check the cache hit since script is able to check the existing files and not download again
-#    - name: Download Input Files
-#      run: |
-#        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-#        export PYTHONPATH=~/.local:$PYTHONPATH
-#        if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
-#          mkdir ${{ inputs.app_install_dir }}/run
-#        fi
-#        cd ${{ inputs.app_install_dir }}/run
-#        python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }} 
-#      shell: bash
-#
-#    # generate configuration files
-#    - name: Generate Configuration Files
-#      run: |
-#        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts:$PYTHONPATH
-#        export PYTHONPATH=$GITHUB_ACTION_PATH/scripts/paramgen:$PYTHONPATH 
-#        cd ${{ inputs.app_install_dir }}/run
-#        python3 $GITHUB_ACTION_PATH/scripts/gen_config.py --ifile ${{ inputs.test_definition }}
-#      shell: bash
-#
-#    # used to debug run and allow ssh just before running the model
-#    - name: Setup tmate session to allow ssh connection
-#      if: ${{ inputs.debug == 'ON' }}
-#      uses: mxschmitt/action-tmate@v3
-#
-#    # run application
-#    - name: Run Application
-#      run: |
-#        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
-#        cd ${{ inputs.app_install_dir }}/run
-#        mpirun ${{ inputs.mpirun_args }} ${{ inputs.app_install_dir }}/build/esmx_app >& out_err.txt
-#        cat out_err.txt
-#        exc=$?
-#        if [ $exc -ne 0 ]; then
-#          echo "Component did not run successfully! Partial output from PET log files: "
-#          tail -n 50 PET*
-#          exit $exc
-#        fi
-#      shell: bash {0}
-#
-#    # upload model artifacts to check it later
-#    - name: Upload Artifacts
-#      uses: actions/upload-artifact@v3
-#      if: ${{ always() }}
-#      with:
-#        name: ${{ inputs.artifacts_name }}
-#        path: ${{ inputs.artifacts_files }}
-#        retention-days: ${{ inputs.artifacts_retention_period }}
-#
-#    # find baseline date from cache, the most recent baseline will be picked
-#    - name: Query Date for Old Baseline From Cache
-#      run: |
-#        # get date for old baseline
-#        BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
-#          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
-#          /repos/${{ github.repository }}/actions/caches | sort -n | \
-#          ( grep "baseline-" || true ) | ( grep "${{ github.ref }}" || true ) | \
-#          tail -n 1 | awk -F\- '{print $2"-"$3"-"$4}' | awk '{print $1}')
-#        # if there is no baseline assign new date
-#        if [ -z "$BL_DATE_OLD" ]; then
-#          BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
-#        fi
-#        echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_ENV
-#        echo "BL_DATE_OLD = $BL_DATE_OLD"
-#      shell: bash
-#
-#    # calculate hashes
-#    - name: Calculate Hashes of Output Files and Query Baseline Date
-#      run: |
-#        # get current baseline date
-#        BL_DATE_OLD=${{ env.BL_DATE_OLD }}
-#        # set new baseline date if 'Baseline Change' tag in PR
-#        force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
-#        echo "Baseline change request is force_bc = $force_bc"
-#        if [[ "$force_bc" == "true" ]]; then
-#          BL_DATE_NEW=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
-#        else
-#          BL_DATE_NEW=$BL_DATE_OLD
-#        fi
-#        echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_ENV
-#        # save hashes of output files for current run
-#        cd ${{ inputs.app_install_dir }}/run
-#        for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
-#        do
-#          if echo x"$i" | grep '*' > /dev/null; then
-#            lst2=`ls -al $i | awk '{print $9}'`
-#            for j in $lst2; do
-#              md5sum $j >> output_hash.txt
-#            done
-#          else
-#            md5sum $i >> output_hash.txt
-#          fi
-#        done
-#        # print out some debug information
-#        if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
-#          echo "BL_DATE_OLD = $BL_DATE_OLD"
-#          echo "BL_DATE_NEW = $BL_DATE_NEW"
-#        else
-#          echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
-#        fi
-#      shell: bash
-#
-#    # restore baseline hash file and files from cache
-#    - name: Restore Baseline Hash File From Cache
-#      uses: actions/cache@v3
-#      with:
-#        path: |
-#          ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
-#        key: baseline-${{ env.BL_DATE_NEW }}
-#        restore-keys: |
-#          baseline-${{ env.BL_DATE_NEW }}
-#
-#    # compare with the baseline
-#    - name: Compare with Baseline or Create New One
-#      run: |
-#        cd ${{ inputs.app_install_dir }}/run
-#        # compare against the baseline, returns false if it does not match
-#        if [ -f "output_hash_baseline.txt" ]; then
-#          echo "Baseline:"
-#          cat output_hash_baseline.txt
-#          echo "Current Run:"
-#          cat output_hash.txt
-#          echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_ENV
-#        # there is no baseline, just copy current one as baseline  
-#        else
-#          echo "Current run will be used as a baseline."
-#          # print out content of the has file
-#          cat output_hash.txt
-#          cp output_hash.txt output_hash_baseline.txt
-#          echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_ENV
-#        fi
-#      shell: bash
-#
-#    # Force to fail if the results are not matched with the baseline
-#    - name: Result of Baseline Check
-#      run: |
-#        if [[ "${{ env.CHECK_RESULT }}" == "false" ]]; then
-#          echo "The results do not match with the baseline!"
-#          exit 1
-#        else
-#          echo "The results match with the baseline."
-#          exit 0
-#        fi
-#      shell: bash
+    # upload model artifacts to check it later
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      if: ${{ always() }}
+      with:
+        name: ${{ inputs.artifacts_name }}
+        path: ${{ inputs.artifacts_files }}
+        retention-days: ${{ inputs.artifacts_retention_period }}
+
+    # find baseline date from cache, the most recent baseline will be picked
+    - name: Query Date for Old Baseline From Cache
+      run: |
+        # get date for old baseline
+        BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
+          --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
+          /repos/${{ github.repository }}/actions/caches | sort -n | \
+          ( grep "baseline-" || true ) | ( grep "${{ github.ref }}" || true ) | \
+          tail -n 1 | awk -F\- '{print $2"-"$3"-"$4}' | awk '{print $1}')
+        # if there is no baseline assign new date
+        if [ -z "$BL_DATE_OLD" ]; then
+          BL_DATE_OLD=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        fi
+        echo "BL_DATE_OLD=$BL_DATE_OLD" >> $GITHUB_ENV
+        echo "BL_DATE_OLD = $BL_DATE_OLD"
+      shell: bash
+
+    # calculate hashes
+    - name: Calculate Hashes of Output Files and Query Baseline Date
+      run: |
+        # get current baseline date
+        BL_DATE_OLD=${{ env.BL_DATE_OLD }}
+        # set new baseline date if 'Baseline Change' tag in PR
+        force_bc=${{ contains(github.event.pull_request.labels.*.name, 'Baseline Change') }}
+        echo "Baseline change request is force_bc = $force_bc"
+        if [[ "$force_bc" == "true" ]]; then
+          BL_DATE_NEW=$(date -u '+%Y-%m-%dT%I:%M:%S.%NZ')
+        else
+          BL_DATE_NEW=$BL_DATE_OLD
+        fi
+        echo "BL_DATE_NEW=$BL_DATE_NEW" >> $GITHUB_ENV
+        # save hashes of output files for current run
+        cd ${{ inputs.app_install_dir }}/run
+        for i in $(echo "${{ inputs.baseline_files }}" | awk '$1=$1' RS= OFS=" ")
+        do
+          if echo x"$i" | grep '*' > /dev/null; then
+            lst2=`ls -al $i | awk '{print $9}'`
+            for j in $lst2; do
+              md5sum $j >> output_hash.txt
+            done
+          else
+            md5sum $i >> output_hash.txt
+          fi
+        done
+        # print out some debug information
+        if [[ "$BL_DATE_OLD" == "$BL_DATE_NEW" ]]; then
+          echo "BL_DATE_OLD = $BL_DATE_OLD"
+          echo "BL_DATE_NEW = $BL_DATE_NEW"
+        else
+          echo "Force baseline change! BL_DATE_OLD ($BL_DATE_OLD) =! BL_DATE_NEW ($BL_DATE_NEW)"
+        fi
+      shell: bash
+
+    # restore baseline hash file and files from cache
+    - name: Restore Baseline Hash File From Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ inputs.app_install_dir }}/run/output_hash_baseline.txt
+        key: baseline-${{ env.BL_DATE_NEW }}
+        restore-keys: |
+          baseline-${{ env.BL_DATE_NEW }}
+
+    # compare with the baseline
+    - name: Compare with Baseline or Create New One
+      run: |
+        cd ${{ inputs.app_install_dir }}/run
+        # compare against the baseline, returns false if it does not match
+        if [ -f "output_hash_baseline.txt" ]; then
+          echo "Baseline:"
+          cat output_hash_baseline.txt
+          echo "Current Run:"
+          cat output_hash.txt
+          echo "CHECK_RESULT=$(cmp --silent output_hash_baseline.txt output_hash.txt && echo 'true' || echo 'false' )" >> $GITHUB_ENV
+        # there is no baseline, just copy current one as baseline  
+        else
+          echo "Current run will be used as a baseline."
+          # print out content of the has file
+          cat output_hash.txt
+          cp output_hash.txt output_hash_baseline.txt
+          echo "CHECK_RESULT=$(echo 'true')" >> $GITHUB_ENV
+        fi
+      shell: bash
+
+    # Force to fail if the results are not matched with the baseline
+    - name: Result of Baseline Check
+      run: |
+        if [[ "${{ env.CHECK_RESULT }}" == "false" ]]; then
+          echo "The results do not match with the baseline!"
+          exit 1
+        else
+          echo "The results match with the baseline."
+          exit 0
+        fi
+      shell: bash
