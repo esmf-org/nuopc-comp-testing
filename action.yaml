@@ -47,11 +47,6 @@ inputs:
     description: data component name
     required: false
     default: datm
-  debug:
-    description: enable debug capability
-    required: false
-    type: boolean
-    default: false 
   dependencies:
     description: list of packages to install
     required: true
@@ -62,6 +57,11 @@ inputs:
   mpirun_args:
     description: atguments that will be used in mpirun command
     required: true
+  ssh:
+    description: creates ssh connection for debugging
+    required: false
+    type: boolean
+    default: false 
   test_definition:
     description: YAML file that describes the test
     required: true

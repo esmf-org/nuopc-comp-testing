@@ -22,14 +22,10 @@ The action mainly includes following features:
 
 ## What's New
 
-### v1.2
+### v1.3
 
-* The extra `mpirun` arguments now need to be passed with `mpirun_arg` input argument.
-* A new `debug` argument is added to the action that allow to create ssh connection to the runner for debugging (uses mxschmitt/action-tmate@v3).
-* Now uses authoritative [Spack repository](https://github.com/spack/spack.git).
-* Spack now uses `curl` to download packages and timeout limit is increased to 60 s to prevent fetching issues
-* Spack now could use system installed packages (`spack external find`).
-* Fixed following issue/s: https://github.com/esmf-org/nuopc-comp-testing/issues/2
+* The action is now using improved version of ESMX, which is provided with ESMF >8.5.0.
+* Fixed following issue/s: https://github.com/esmf-org/nuopc-comp-testing/issues/4
 
 ## Usage
 
@@ -54,10 +50,10 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 * `component_build` - The list of shell commands to build the component. This is required since the GitHub Action do not know anything about the component build system and requirements.
 * `component_module_name` - The Fortran module name of the component that will be tested. This argument is currently required but it would be a part of the user provided YAML files.
 * `data_component_name` - The optional name of data component that will be used to force the component. The valid values are `datm` (default), `dice`, `dlnd`, `docn`, `drof` and `dwav`. It would be a part of the user provided YAML files in the future.
-* `debug` - The optional argument for debugging purpose. It triggers extra output and also create ssh connection to the runner for debugging (uses [mxschmitt/action-tmate@v3](https://github.com/mxschmitt/action-tmate)).
 * `dependencies` - The list of dependencies that are used to build the application. Since Spack is used to install dependencies, the given packages need to be part of the Spack distribution. The list of packages can be seen in [here](https://packages.spack.io). The ESMF package (`esmf@8.4.0b15+parallelio`) needs to be added to the list. 
 * `dependencies_install_dir` - An optional path of installation directory for dependencies. The default value is set to `~/.spack-ci`.
 * `mpirun_arg` - The required argument to be passed to `mpirun` command. For example `--oversubscribe -np 6 --mca btl_tcp_if_include eth0` can be passed to run test case on 6 processor (`--oversubscribe` is required for the jobs that needs to be run more then 2 processor and `--mca btl_tcp_if_include eth0` is required to overcome hanging issue of collective communication under GitHub runners).
+* `ssh` - The optional argument to create ssh connection to GitHub runner for debugging (uses [mxschmitt/action-tmate@v3](https://github.com/mxschmitt/action-tmate)).
 * `test_definition` - The top level YAML file that describes the test. This is required.
 
 #### Environment Variables
