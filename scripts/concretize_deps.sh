@@ -35,7 +35,7 @@ if [[ -z "$arch" || ! -z `echo $arch | grep '^-'` ]]; then
 fi
 
 if [[ -z "$comp" || ! -z `echo $comp | grep '^-'` ]]; then
-  comp="11.4.0"
+  comp="11.3.0"
 fi
 
 # print out arguments
