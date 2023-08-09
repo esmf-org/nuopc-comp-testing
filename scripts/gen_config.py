@@ -9,7 +9,6 @@ try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader, Dumper
-from gen_runseq import RunSeq
 from paramgen import ParamGen
 
 def expand_func(varname):
@@ -41,17 +40,24 @@ def gen_config(_dict, ifile):
     # data structure to keep tracking file open mode
     append = {}
 
-    # order list based on components
-    od = collections.OrderedDict(sorted(_dict['components'].items()))
-
     # loop over components read component specific YAML files
-    for k1, v1 in od.items():
+    ga = False
+    for k1, v1 in _dict['components'].items():
         if 'drv' == k1:
             # get driver content
             _dict_comp = _dict['components'][k1] 
 
+            # check configuration for generalAttributes
+            if 'generalAttributes' in _dict_comp['config']['hconfig']['content'].keys():
+                ga = True
+
             # get driver config file
-            drv_config_file = _dict_comp['config']['nuopc']['name']
+            if 'nuopc' in _dict_comp['config']:
+                drv_config_file = _dict_comp['config']['nuopc']['name']
+            elif 'hconfig' in _dict_comp['config']:
+                drv_config_file = _dict_comp['config']['hconfig']['name']
+            else:
+                sys.exit("config section requires nuopc or hconfig in {}! exiting ...".format(ifile))
         else:
             # read component YAML file
             if os.path.isabs(os.path.dirname(v1)): # absolute path is used
@@ -69,7 +75,7 @@ def gen_config(_dict, ifile):
                     sys.exit("name is not given for '{}:{}' config section!".format(k1, k2))
 
                 # append to file or not
-                k3 = '{}_{}'.format(k2[0:3], ofile)
+                k3 = '{}_{}'.format(k2, ofile)
                 if k3 in append:
                     append[k3] = True 
                 else:
@@ -84,17 +90,19 @@ def gen_config(_dict, ifile):
                     # loop over data and find dynamic variables like ${VAR}
                     for k4, v4 in pg.data.items():
                         for k5, v5 in v4.items():
-                            # convert to string
-                            value_str = str(v5['values']).strip()
-
-                            # find start and end indices of each occurance
-                            sind = [i for i in range(len(value_str)) if value_str.startswith('${', i)]
-                            eind = [i+1 for i in range(len(value_str)) if value_str.startswith('}', i)]
-
-                            # loop over them and create dictionary
-                            for i, j in zip(sind, eind):
-                                env_var = value_str[i:j].replace('${', '').replace('}', '')
-                                glob_list.append(env_var)
+                            if isinstance(v5, dict):
+                                key, val = list(v5.items())[0]
+                                if 'values' in key:
+                                    glob_list = add_to_list(v5, glob_list)
+                                else:
+                                    for k6, v6 in v5.items():
+                                        if 'values' in v6:
+                                            glob_list = add_to_list(v6, glob_list)
+                                        else:
+                                            for k7, v7 in v6.items():
+                                                glob_list = add_to_list(v7, glob_list)
+                            else:
+                                glob_list = add_to_list(v5, glob_list)
 
                     # remove duplicates from list
                     glob_list = list(set(glob_list))
@@ -107,31 +115,26 @@ def gen_config(_dict, ifile):
                         pg.write_nuopc(ofile, append=append[k3])
                     elif 'nml' in k2:
                         pg.write_nml(ofile, append=append[k3])
+                    elif 'hconfig' in k2:
+                        pg.write_hconfig(ofile, append=append[k3], ga=ga)
                     else:
                         sys.exit("{} format for config file is not supported!".format(k2))
                 else:
                     sys.exit("content is not given for '{}:{}' config section!".format(k1, k2))
 
-    # add run sequence to driver config file
-    mode = 'w'
-    if os.path.exists(drv_config_file):
-        mode = 'a'
+def add_to_list(_val, _list):
+    # convert to string
+    value_str = str(_val['values']).strip()
 
-    with RunSeq(drv_config_file, mode=mode) as runseq:
-        # get run sequence
-        _dict_drv = _dict['components']['drv']['runseq']
+    # find start and end indices of each occurance
+    sind = [i for i in range(len(value_str)) if value_str.startswith('${', i)]
+    eind = [i+1 for i in range(len(value_str)) if value_str.startswith('}', i)]
 
-        # loop over run sequence
-        dt = _dict_drv['dt']['values']
-        runseq.enter_time_loop(dt)
-        for k1, v1 in _dict_drv.items():
-            if 'dt' != k1:
-                _str = k1.upper().replace('-TO-', ' -> ').strip()
-                if _str != k1.upper():
-                    _str = ' :'.join([_str, v1['values']])
-                    runseq.add_action(_str, True)
-                else:
-                    runseq.add_action(_str, True)
+    # loop over them and create dictionary
+    for i, j in zip(sind, eind):
+        env_var = value_str[i:j].replace('${', '').replace('}', '')
+        _list.append(env_var)
+    return(_list)
 
 def main(argv):
     # default values

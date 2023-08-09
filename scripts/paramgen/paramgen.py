@@ -615,3 +615,113 @@ class ParamGen:
 
                 if 'no_group' != module.strip().lower():
                     nuopc.write("::\n")
+
+    def write_hconfig(self, output_path, append=False, ga=False):
+        """Writes the reduced data in ESMF hconfig file format (YAML) if the data conforms to the format.
+
+        Parameters
+        ----------
+        output_path: str object
+            Path to the namelist file to be created.
+        append: logical object
+            Flag to append to the existing file. Default value is False.
+        """
+
+        assert (
+            self._reduced
+        ), "The data may be written only after the reduce method is called."
+
+        # check *schema* after reduction
+        for grp, var in self.data.items():
+            # grp is the namelist module name, while var is a dictionary corresponding to the vars in namelist
+            assert isinstance(grp, str), "Invalid data format"
+            assert isinstance(var, dict), "Invalid data format"
+            for vls in var.values():
+                # vnm is the var name, and vls is its values element
+                assert isinstance(vls, dict), "Invalid data format"
+                for val in vls:
+                    # val is a value in the values dict
+                    assert isinstance(val, str), "Invalid data format"
+
+        # write the namelist file
+        open_mode = 'w'
+        if append:
+            open_mode = 'a'
+
+        with open(output_path, open_mode) as nuopc:
+            #pmodule = list(self._data.keys())[0]
+            for module in self._data:
+                indent = ''
+                seperator = ': '
+                _str = module.strip().lower()
+                if 'no_group' != _str:
+                    if 'generalattributes' in _str:
+                        nuopc.write("{}: &anchor\n".format(module))
+                    else:
+                        nuopc.write("{}:\n".format(module))
+                    indent = '  '
+
+                # populate dictionary
+                my_dict = collections.defaultdict(dict)
+                for var in self._data[module]:
+                    for k1, v1 in self._data[module][var].items():
+                        if isinstance(v1, str):
+                            my_dict[var][k1] = v1
+                        else:
+                            if isinstance(v1, dict):
+                                if not 'values' in v1.keys():
+                                    for k2, v2 in v1.items():
+                                        if (isinstance(v2["values"], (list))):
+                                            val = ', '.join(v2["values"])
+                                            my_dict[var][k1] = {k2: '[{}]'.format(val)}
+                                        else:
+                                            vals = str(v2["values"]).strip().split(',')
+                                            my_dict[var][k1] = {k2: vals[0]}
+                                else:
+                                    if (isinstance(v1["values"], (list))):
+                                        val = ', '.join(v1["values"])
+                                        my_dict[var][k1] = '[{}]'.format(val)
+                                    else:
+                                        vals = str(v1["values"]).strip().split(',')
+                                        my_dict[var][k1] = vals[0]
+                            else:
+                                my_dict[var][k1] = str(v1)
+
+                # write information from dictionary to file
+                it = 0
+                pindent1 = indent
+                for k1 in my_dict.keys():
+                    if not 'no_group' in k1:
+                        nuopc.write("{}{}{}\n".format(pindent1, k1.strip(), seperator))
+                        if it == 0:
+                            indent = '  '+indent
+                        it = it+1
+                    it2 = 0
+                    indent2 = ''
+                    for k2, v2 in my_dict[k1].items():
+                        if isinstance(v2, dict):
+                            if not 'no_group' in k2:
+                                nuopc.write("{}{}{}\n".format(indent, k2.strip(), seperator))
+                                if it2 == 0:
+                                    indent2 = '  '+indent
+                                it2 = it2+1
+                                for k3, v3 in v2.items():
+                                    nuopc.write("{}{}{}{}\n".format(indent2, k3.strip(), seperator, v3.strip()))
+                            else:
+                                if 'runSequence' in v2.keys():
+                                    nuopc.write("{}{}{}\n".format(indent, 'runSequence', seperator+'|'))
+                                    _lst = [x.strip() for x in v2['runSequence'].split('\n')]
+                                    for i, elem in enumerate(_lst):
+                                        if i == 0 or i == len(_lst)-1:
+                                            _lst[i] = '{}{}'.format(indent2, elem)
+                                        else:
+                                            _lst[i] = '  {}{}'.format(indent2, elem)
+                                    _str = '\n'.join(_lst)
+                                    nuopc.write("{}{}\n".format('', _str))
+                        else:
+                            if v2 is not None:
+                                nuopc.write("{}{}{}{}\n".format(indent, k2.strip(), seperator, v2.strip()))
+
+                    if not 'ESMX' in module and not 'generalAttributes' in module:
+                        if 'attributes' in k1:
+                            nuopc.write("{}{}\n".format(indent, '<<: *anchor'))
