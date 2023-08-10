@@ -60,7 +60,7 @@ cat ~/.spack/linux/compilers.yaml
 echo "::endgroup::"
 
 # check given compiler is found or not?
-if [ -z "$(cat ~/.spack/linux/compilers.yaml | grep $comp_str)" ]; then
+if [ -z "$(cat ~/.spack/linux/compilers.yaml | grep $comp)" ]; then
   echo "Given compiler not found! Try to find another ..."
   str=`echo $comp | awk -F= '{print $1}'`
   comp_new=`grep -ir $str ~/.spack/linux/compilers.yaml | sort | tail -n 1 | awk '{print $2}' | sed -r 's/=//g'`
