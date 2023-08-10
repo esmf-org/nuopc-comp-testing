@@ -534,6 +534,3 @@ config:
 ```
 
 Like land component specific YAML file, CDEPS file also includes sections for input and namelist files. As it can be seen from the example YAML file, the configuration uses `datm` data component and `CLMNCEP` data mode, which provides GSWP3 forcing to land component.
-
-> **Note**
-> The YAML file defines two different namelist file in ESMF config format: `nuopc1` for `esmxRun.config` and `nuopc2` for `datm.streams`.
