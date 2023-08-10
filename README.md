@@ -25,6 +25,8 @@ The action mainly includes following features:
 ### v1.3
 
 * The action is now using improved version of ESMX, which is provided with ESMF >8.5.0.
+* The namelist generation is updated to handle new ESMF YAML based config format (hconfig).
+* If given compiler is not found (default gcc@11.3.0), the action tries to use same compiler but most up-to-date version available.
 * Fixed following issue/s: https://github.com/esmf-org/nuopc-comp-testing/issues/4
 
 ## Usage
@@ -95,7 +97,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         test: [test_datm_lnd]
-        esmf: [develop, 8.5.0b10]
+        esmf: [develop, 8.5.0]
     
     env:
       # set token to access gh command
@@ -110,7 +112,7 @@ jobs:
     steps:
       # test component
       - name: Test Component
-        uses: esmf-org/nuopc-comp-testing@v1.2.0
+        uses: esmf-org/nuopc-comp-testing@v1.3.0
         with:
           app_install_dir: ${{ env.APP_INSTALL_DIR }}
           artifacts_name: artifacts for ${{ matrix.test }} ${{ matrix.os }} esmf@${{ matrix.esmf }}
@@ -135,7 +137,7 @@ jobs:
             cmake -DCMAKE_INSTALL_PREFIX=${{ env.APP_INSTALL_DIR }} ../
             make
             make install
-          component_module_name: lnd_comp_nuopc
+          component_module_name: lnd_comp_nuopc.mod
           data_component_name: datm
           dependencies: |
             esmf@${{ matrix.esmf }}+external-parallelio
@@ -153,63 +155,72 @@ The action test the component against two different version of ESMF library (dev
 ##### Top-level YAML file for driver (.github/workflows/tests/test_datm_lnd.yaml)
 
 ```yaml
+---
 components:
   drv:
-    runseq:
-      dt: 
-        values: 3600
-      lnd-to-atm:
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      atm-to-lnd: 
-        values: remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
-      atm:
-      lnd:
     input:
       field_table:
         protocol: wget
         end_point: 'https://raw.githubusercontent.com'
         files:
           - /ufs-community/ufs-weather-model/develop/tests/parm/fd_nems.yaml
+        force: True
     config:
-      nuopc:
-        name: esmxRun.config
+      hconfig:
+        name: esmxRun.yaml
         content:
-          ESMX_attributes:
-            Verbosity:
-              values: high
-          ALLCOMP_attributes:
-            case_name:
-              values: comp.test
-            stop_n: 
-              values: 1
-            stop_option: 
-              values: ndays
-            stop_tod: 
-              values: 0
-            stop_ymd: 
-              values: -999
-            restart_n: 
-              values: 1
-            restart_option: 
-              values: never
-            restart_ymd: 
-              values: -999
-          no_group:
-            ESMX_component_list:
-              values: COMPA COMPB
-            startTime:
-              values: '2000-01-01T00:00:00'
-            stopTime:
-              values: '2000-01-02T00:00:00'
-            logKindFlag:
-              values: ESMF_LOGKIND_MULTI
-            globalResourceControl:
-              values: .true.
-            ESMX_log_flush:
-              values: .true.
-            ESMX_field_dictionary: 
-              values: fd.yaml
-    
+          ESMX:
+            App:
+              globalResourceControl:
+                values: 'true'
+              logKindFlag:
+                values: ESMF_LOGKIND_Multi
+              logAppendFlag:
+                values: 'false'
+              logFlush:
+                values: 'true'
+              fieldDictionary:
+                values: fd_nems.yaml
+              startTime:
+                values: '2000-01-01T00:00:00'
+              stopTime:
+                values: '2000-01-02T00:00:00'
+            Driver:
+              componentList:
+                values:
+                  - ATM
+                  - LND
+              attributes:
+                Verbosity:
+                  values: low
+              no_group:
+                runSequence:
+                  values: |
+                    @3600
+                      LND -> ATM :remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+                      ATM -> LND :remapMethod=bilinear:unmappedaction=ignore:zeroregion=select:srcTermProcessing=0:termOrder:srcseq
+                      ATM
+                      LND
+                    @
+          generalAttributes:
+            no_group:
+              case_name:
+                values: comp.test
+              stop_n:
+                values: 1
+              stop_option:
+                values: ndays
+              stop_tod:
+                values: 0
+              stop_ymd:
+                values: -999
+              restart_n:
+                values: 1
+              restart_option:
+                values: never
+              restart_ymd:
+                values: -999
+
   lnd: test_datm_lnd/lnd.yaml
 
   atm: test_datm_lnd/datm.yaml
@@ -221,11 +232,11 @@ The top level driver `.yml` file includes information about [NUOPC run sequence]
 
 * `input` - These sections define the set of inputs that are required for the driver. There could be multiple entries under this section. For example, `field_table` section basically downloads NUOPC field dictionary from UFS Weather Model repository using `wget` command. The [Python script](https://github.com/uturuncoglu/nuopc-comp-testing/blob/main/scripts/get_input.py) that is used to download data also supports other protocols such as `ftp`, `wget`, `s3` and `s3cli`. The optional `target_directory` argument also enable to specify target directory (both absolute and relative paths are supported) for the retrieved data. 
 
-* `config` - This section mainly used to create namelist files. It supports multiple formats: (1) Standard Fortran namelist (`nml:`)  and, (2) ESMF config (`nuopc:`) format
+* `config` - This section mainly used to create namelist files. It supports multiple formats: (1) Standard Fortran namelist (`nml:`), (2) ESMF config (`nuopc:`) format, and (3) YAML based ESMF config format (`hconfig:`)
    
    - `name:` This section basically defines the name of the namelist file and if any other `.yml` file (driver or component ones) has section with same file name, then the content are appended to the existing namelist file. With this approach, each component could append their component specific namelist options for example top level driver ESMF config file.
    
-   - `content:` This section mainly includes the content of the namelist file and uses format defined by the ParamGen tool. It is also possible to overwrite the content of this section by defining environment variable with the same name. To that end, the same file can be used for different application by changing set of namelist variables on-the-fly. 
+   - `content:` This section mainly includes the content of the namelist file and uses format defined by the ParamGen tool. It is also possible to overwrite the content of this section by defining environment variable with the same name. To that end, the same file can be used for different application by changing set of namelist variables on-the-fly. The `ESMX` section includes two sub-section like `App` and `Driver`, which are dedicated to driver specific configuration options such as list of components, run sequence and start/stop times. The `generalAttributes` section holds options that are required by both model components (in this case, `ATM` and `LND`). The namelist generator basically uses `generalAttributes` section to create the anchor '&' which defines a chunk of configuration and append it to the component specific sections using '<<:' syntax.
    
 > **Note**
 > It is also possible to add multiple namelist files in the same format by modifying namelist tag as `nuopc1:`, `nuopc2:` etc.
@@ -261,6 +272,12 @@ input:
       - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile4.nc
       - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile5.nc
       - input-data-20221101/FV3_fix_tiled/C96/C96.soil_type.tile6.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile1.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile2.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile3.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile4.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile5.nc
+      - input-data-20221101/FV3_fix_tiled/C96/C96.soil_color.tile6.nc
       - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile1.nc
       - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile2.nc
       - input-data-20221101/FV3_fix_tiled/C96/C96.substrate_temperature.tile3.nc
@@ -305,79 +322,70 @@ input:
       - /esmf-org/noahmp/develop/.github/workflows/data/C96.initial.tile6.nc
     target_directory: 'INPUT'
 config:
-  nuopc:
-    name: esmxRun.config
+  hconfig:
+    name: esmxRun.yaml
     content: 
-      no_group:
-        LND_model:
-          values: noahmp
-        LND_petlist: 
-          values: 0-5
-      LND_attributes:
-        Verbosity:
-          values: 0
-        Diagnostic:
-          values: 0
-        mosaic_file:
-          values: INPUT/grid_spec.nc
-        input_dir:
-          values: INPUT/
-        ic_type:
-          values: custom
-        num_soil_levels:
-          values: 4
-        forcing_height:
-          values: 10
-        soil_level_thickness:
-          values: 0.10:0.30:0.60:1.00
-        soil_level_nodes:
-          values: 0.05:0.25:0.70:1.50
-        dynamic_vegetation_option:
-          values: 4
-        canopy_stomatal_resistance_option:
-          values: 2
-        soil_wetness_option:
-          values: 1
-        runoff_option:
-          values: 1
-        surface_exchange_option:
-          values: 3
-        supercooled_soilwater_option:
-          values: 1
-        frozen_soil_adjust_option:
-          values: 1
-        radiative_transfer_option:
-          values: 3
-        snow_albedo_option:
-          values: 1
-        precip_partition_option:
-          values: 4
-        soil_temp_lower_bdy_option:
-          values: 2
-        soil_temp_time_scheme_option:
-          values: 3
-        surface_evap_resistance_option:
-          values: 1
-        glacier_option:
-          values: 1
-        surface_thermal_roughness_option:
-          values: 2
-        output_freq:
-          values: 10800
-        has_export:
-          values: .false.
-  nml:
-    name: input.nml
-    content:
-      fms_nml:
-        clock_grain:
-          values: "'ROUTINE'"
-        clock_flags:
-          values: "'NONE'"
-        domains_stack_size:
-          values: 5000000
-        stack_size:
-          values: 0
+      LND:
+        no_group:
+          model:
+            values: noahmp
+          petlist:
+            values: 0-5
+        attributes:
+          Verbosity:
+            values: 0
+          Diagnostic:
+            values: 0
+          mosaic_file:
+            values: INPUT/grid_spec.nc
+          input_dir:
+            values: INPUT/
+          ic_type:
+            values: custom
+          layout:
+            values: "1:1"
+          num_soil_levels:
+            values: 4
+          forcing_height:
+            values: 10
+          soil_level_thickness:
+            values: 0.10:0.30:0.60:1.00
+          soil_level_nodes:
+            values: 0.05:0.25:0.70:1.50
+          dynamic_vegetation_option:
+            values: 4
+          canopy_stomatal_resistance_option:
+            values: 2
+          soil_wetness_option:
+            values: 1
+          runoff_option:
+            values: 1
+          surface_exchange_option:
+            values: 3
+          supercooled_soilwater_option:
+            values: 1
+          frozen_soil_adjust_option:
+            values: 1
+          radiative_transfer_option:
+            values: 3
+          snow_albedo_option:
+            values: 1
+          precip_partition_option:
+            values: 4
+          soil_temp_lower_bdy_option:
+            values: 2
+          soil_temp_time_scheme_option:
+            values: 3
+          surface_evap_resistance_option:
+            values: 1
+          glacier_option:
+            values: 1
+          surface_thermal_roughness_option:
+            values: 2
+          output_freq:
+            values: 10800
+          has_export:
+            values: 'false'
 ```
 
 The land component specific `.yml` file includes component specific information such as required input and configuration files. As it can be seen, the file includes two main sections: (1) input and (2) configuration files related. In input file section, the static information for the land component is retrieved from NOAA UFS Weather Model provided [Amazon S3 bucket](https://registry.opendata.aws/noaa-ufs-regtests/). On the other hand, the initial condition data is stored in the component repository under `.github/workflows/data/` folder and retrieved via `wget` command. In this case, all the data files will be downloaded to `INPUT` directory (relative to `github.workspace }}/app/`), which is specified by the `target_directory:` entry.
@@ -405,60 +413,45 @@ input:
       - /trunk/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
     target_directory: 'INPUT'
 config:
-  nuopc1:
-    name: esmxRun.config
+  hconfig:
+    name: esmxRun.yaml
     content: 
-      no_group:
-        ATM_model:
-          values: datm
-        ATM_petlist:
-          values: 0-5
-      ATM_attributes:
-        Verbosity:
-          values: 0
-        Diagnostic:
-          values: 0
-        read_restart:
-          values: .false.
-        orb_eccen:
-          values: 1.e36
-        orb_iyear:
-          values: 2000
-        orb_iyear_align:
-          values: 2000
-        orb_mode: 
-          values: fixed_year
-        orb_mvelp: 
-          values: 1.e36
-        orb_obliq: 
-          values: 1.e36
-        ScalarFieldCount: 
-          values: 3
-        ScalarFieldIdxGridNX: 
-          values: 1
-        ScalarFieldIdxGridNY: 
-          values: 2
-        ScalarFieldIdxNextSwCday: 
-          values: 3
-        ScalarFieldName: 
-          values: cpl_scalars
-        case_name:
-          values: comp.test
-        stop_n:
-          values: 1
-        stop_option:
-          values: ndays
-        stop_tod:
-          values: 0
-        stop_ymd:
-          values: -999
-        restart_n:
-          values: 1
-        restart_option:
-          values: never
-        restart_ymd:
-          values: -999
-  nuopc2:
+      ATM:
+        no_group:
+          model:
+            values: datm
+          petlist:
+            values: 0-5
+        attributes:
+          Verbosity:
+            values: 0
+          Diagnostic:
+            values: 0
+          read_restart:
+            values: .false.
+          orb_eccen:
+            values: 1.e36
+          orb_iyear:
+            values: 2000
+          orb_iyear_align:
+            values: 2000
+          orb_mode:
+            values: fixed_year
+          orb_mvelp:
+            values: 1.e36
+          orb_obliq:
+            values: 1.e36
+          ScalarFieldCount:
+            values: 3
+          ScalarFieldIdxGridNX:
+            values: 1
+          ScalarFieldIdxGridNY:
+            values: 2
+          ScalarFieldIdxNextSwCday:
+            values: 3
+          ScalarFieldName:
+            values: cpl_scalars
+  nuopc:
     name: datm.streams
     content:
       no_group:
