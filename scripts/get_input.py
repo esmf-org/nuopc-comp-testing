@@ -135,7 +135,7 @@ def cmd_get(end_point, files, fhash, target_dir, force_download):
         if download:
             if force_download:
                 if os.path.exists(lfile):
-                    print("force_download is {}. removing existing file {}".format(os.remove(force_download, lfile))
+                    print("force_download is True. removing existing file {}".format(lfile))
                     os.remove(lfile)
                 cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
             print("cmd is {}".format(cmd))
