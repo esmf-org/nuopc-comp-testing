@@ -124,3 +124,8 @@ if [ $exc -ne 0 ]; then
   exit $exc
 fi
 echo "::endgroup::"
+
+# content of spack.lock
+echo "::group::Content of spack.lock"
+cat $run_dir/spack.lock
+echo "::endgroup::"
