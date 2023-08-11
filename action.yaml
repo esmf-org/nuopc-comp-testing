@@ -220,12 +220,14 @@ runs:
       if: ${{ always() }}
       with:
         name: ${{ inputs.artifacts_name }}
-        path: ${{ inputs.artifacts_files }} $GITHUB_WORKSPACE/spack.lock
+        path: ${{ inputs.artifacts_files }}
         retention-days: ${{ inputs.artifacts_retention_period }}
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
       run: |
+        ls -al $GITHUB_WORKSPACE
+        cat $GITHUB_WORKSPACE/spack.lock
         # get date for old baseline
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
           --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
