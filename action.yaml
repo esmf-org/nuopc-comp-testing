@@ -220,7 +220,7 @@ runs:
       if: ${{ always() }}
       with:
         name: ${{ inputs.artifacts_name }}
-        path: ${{ inputs.artifacts_files }}
+        path: ${{ inputs.artifacts_files }} $GITHUB_WORKSPACE/spack.lock
         retention-days: ${{ inputs.artifacts_retention_period }}
 
     # find baseline date from cache, the most recent baseline will be picked
