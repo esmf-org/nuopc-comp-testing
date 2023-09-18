@@ -45,13 +45,12 @@ def recv_files(_dict, fhash, force_download):
                 sys.exit('Files are not listed for component {} and section {}!'.format(k1, k2))
 
             if 'force' in v2:
-                force = v2['force']
+                force_download = v2['force']
             else:
-                force = False
+                force_download = False
 
             # overwrite force download using YAML
-            if force:
-                force_download = True
+            if force_download:
                 print('Force download of {}!'.format(files))
 
             # save current directory
@@ -103,10 +102,23 @@ def ftp_get(end_point, files, fhash, target_dir, force_download):
 
         # download file
         with open(lfile, "wb") as fout:
-            if os.path.exists(lfile) and not force_download:
-                print('file \'{}\' is found. skip downloading'.format(lfile))
+            # check file
+            download = False
+            if not os.path.exists(lfile):
+                download = True
+                print('file \'{}\' is not found. downloading ...'.format(lfile))
             else:
-                print('downloading {}'.format(lfile)) 
+                if force_download:
+                    download = True
+                    print('file \'{}\' is found but force_download is set to {}. downloading ...'.format(lfile, force_download))
+                else:
+                    print('file \'{}\' is found. skip downloading'.format(lfile))
+
+            if download:
+                if os.path.exists(lfile):
+                    print("force_download is {}. removing existing file {}".format(force_download, lfile))
+                    os.remove(lfile)
+                print('downloading {}'.format(lfile))
                 ftp.retrbinary(f"RETR {f}", fout.write)
 
         # close connection
@@ -126,20 +138,25 @@ def cmd_get(end_point, files, fhash, target_dir, force_download):
         lfile = os.path.basename(f)
 
         # check file
-        download = True
-        if os.path.exists(lfile) and not force_download:
-            print('file \'{}\' is found. skip downloading'.format(lfile))
-            download = False
+        download = False
+        if not os.path.exists(lfile):
+            download = True
+            print('file \'{}\' is not found. downloading ...'.format(lfile))
+        else:
+            if force_download:
+               download = True
+               print('file \'{}\' is found but force_download is set to {}. downloading ...'.format(lfile, force_download))
+            else:
+               print('file \'{}\' is found. skip downloading'.format(lfile))
 
         # download file
         if download:
-            if force_download:
-                if os.path.exists(lfile):
-                    print("force_download is True. removing existing file {}".format(lfile))
-                    os.remove(lfile)
-                cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
-                print("cmd is {}".format(cmd))
-                os.system(cmd)
+            if os.path.exists(lfile):
+                print("force_download is {}. removing existing file {}".format(force_download, lfile))
+                os.remove(lfile)
+            cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
+            print("cmd is {}".format(cmd))
+            os.system(cmd)
 
         # get hash of file
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
@@ -154,11 +171,17 @@ def s3_cli_get(end_point, files, fhash, target_dir, force_download):
     for f in files:
         lfile = os.path.basename(f)
 
-        # download file
-        download = True
-        if os.path.exists(lfile) and not force_download:
-            print('file \'{}\' is found. skip downloading'.format(lfile))
-            download = False 
+        # check file
+        download = False
+        if not os.path.exists(lfile):
+            download = True
+            print('file \'{}\' is not found. downloading ...'.format(lfile))
+        else:
+            if force_download:
+               download = True
+               print('file \'{}\' is found but force_download is set to {}. downloading ...'.format(lfile, force_download))
+            else:
+               print('file \'{}\' is found. skip downloading'.format(lfile))
 
         if download:
             cmd = 'aws s3 cp --no-sign-request s3://{}/{} .'.format(end_point, f)
@@ -192,29 +215,28 @@ def s3_get(end_point, files, fhash, target_dir, force_download):
             else:
                 md5sum_remote = None
 
-        # try to get checksum from local file, if exists
-        found = False
-        if os.path.exists(lfile):
-            found = True
-            md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
-        else:
-            md5sum_local = None
-
-        # download file if local file not found or checksums not matched
+        # check file
         download = False
-        if not found:
+        if not os.path.exists(lfile):
             download = True
+            print('file \'{}\' is not found. downloading ...'.format(lfile))
         else:
+            # get hash of local file
+            md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
+
+            # check conditions to download file/s
             if md5sum_remote != md5sum_local:
-                print('file \'{}\' is found but checksums are not matched!\ns3   :{}\nlocal:{}'.format(lfile, md5sum_remote, md5sum_local))
-                download = True
-        if force_download:
-            download = True
+               download = True
+               print('file \'{}\' is found but checksums are not matched!\ns3   :{}\nlocal:{}'.format(lfile, md5sum_remote, md5sum_local))
+            elif force_download:
+               download = True
+               print('file \'{}\' is found but force_download is set to {}. downloading ...'.format(lfile, force_download))
+            else:
+               print('file \'{}\' is found. skip downloading'.format(lfile))
+
         if download:    
             print('downloading \'{}\''.format(lfile)) 
             s3.download_file(Bucket=end_point, Key=f, Filename=lfile)
-        else:
-            print('file \'{}\' is found. skip downloading'.format(lfile))
 
         # write file name and checksum to file
         if target_dir:
