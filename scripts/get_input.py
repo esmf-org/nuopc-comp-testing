@@ -138,8 +138,8 @@ def cmd_get(end_point, files, fhash, target_dir, force_download):
                     print("force_download is True. removing existing file {}".format(lfile))
                     os.remove(lfile)
                 cmd = 'wget --no-verbose --no-check-certificate -c {}:{}'.format(end_point, f)
-            print("cmd is {}".format(cmd))
-            os.system(cmd)
+                print("cmd is {}".format(cmd))
+                os.system(cmd)
 
         # get hash of file
         md5sum_local = hashlib.md5(open(lfile,'rb').read()).hexdigest()
