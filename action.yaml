@@ -132,7 +132,7 @@ runs:
           -DPIO_C_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
           -DPIO_Fortran_LIBRARY=${{ inputs.dependencies_install_dir }}/view/lib \
           -DPIO_Fortran_INCLUDE_DIR=${{ inputs.dependencies_install_dir }}/view/include \
-          -DCMAKE_Fortran_FLAGS="-ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz -ffree-line-length-512 -DCPRGNU" \
+          -DCMAKE_Fortran_FLAGS="-g -fbacktrace -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz -ffree-line-length-512 -DCPRGNU" \
           -DDISABLE_FoX=ON ../
         make
         make install
