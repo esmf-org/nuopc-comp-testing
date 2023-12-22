@@ -55,7 +55,6 @@ Create components `.yml` file in your repositories under `.github/workflows/test
 * `dependencies` - The list of dependencies that are used to build the application. Since Spack is used to install dependencies, the given packages need to be part of the Spack distribution. The list of packages can be seen in [here](https://packages.spack.io). The ESMF package (`esmf@8.4.0b15+parallelio`) needs to be added to the list. 
 * `dependencies_install_dir` - An optional path of installation directory for dependencies. The default value is set to `~/.spack-ci`.
 * `mpirun_arg` - The required argument to be passed to `mpirun` command. For example `--oversubscribe -np 6 --mca btl_tcp_if_include eth0` can be passed to run test case on 6 processor (`--oversubscribe` is required for the jobs that needs to be run more then 2 processor and `--mca btl_tcp_if_include eth0` is required to overcome hanging issue of collective communication under GitHub runners).
-* `ssh` - The optional argument to create ssh connection to GitHub runner for debugging (uses [mxschmitt/action-tmate@v3](https://github.com/mxschmitt/action-tmate)).
 * `test_definition` - The top level YAML file that describes the test. This is required.
 
 #### Environment Variables
