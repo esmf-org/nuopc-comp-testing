@@ -51,6 +51,7 @@ cd $run_dir
 # checkout spack and setup to use it
 echo "::group::Checkout Spack"
 git clone https://github.com/spack/spack.git
+export SPACK_ROOT="$run_dir/spack"
 . spack/share/spack/setup-env.sh
 echo "::endgroup::"
 
