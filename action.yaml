@@ -215,9 +215,9 @@ runs:
         retention-days: ${{ inputs.artifacts_retention_period }}
 
     # used to debug run by allowing ssh connection to GitHub runner
-    - name: Setup tmate session to allow ssh connection
-      uses: mxschmitt/action-tmate@v3
-      if: $${{ always() && steps.run_application.outcome == 'failure' }}
+    #- name: Setup tmate session to allow ssh connection
+    #  uses: mxschmitt/action-tmate@v3
+    #  if: $${{ always() && steps.run_application.outcome == 'failure' }}
 
     # find baseline date from cache, the most recent baseline will be picked
     - name: Query Date for Old Baseline From Cache
