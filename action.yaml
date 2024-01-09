@@ -223,7 +223,6 @@ runs:
     - name: Query Date for Old Baseline From Cache
       run: |
         ls -al $GITHUB_WORKSPACE
-        cat $GITHUB_WORKSPACE/spack.lock
         # get date for old baseline
         BL_DATE_OLD=$(gh api -H "Accept: application/vnd.github+json" \
           --jq '.actions_caches[] | (.id|tostring) + " " + .key + " " + .ref' \
