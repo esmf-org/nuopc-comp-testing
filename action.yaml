@@ -66,7 +66,7 @@ runs:
   steps:
     # checkout base repository
     - name: Checkout Component Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: ${{ inputs.app_install_dir }}/${{ inputs.component_name }}
 
@@ -112,11 +112,12 @@ runs:
 
     # checkout data models
     - name: Checkout CDEPS
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: ESCOMP/CDEPS
         path: ${{ inputs.app_install_dir }}/cdeps
         ref: main
+        submodules: true
 
     # build and install data models
     - name: Build and Install CDEPS
