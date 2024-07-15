@@ -122,6 +122,12 @@ def gen_config(_dict, ifile):
                 else:
                     sys.exit("content is not given for '{}:{}' config section!".format(k1, k2))
 
+                # print config file for debugging
+                if os.path.exists(ofile):
+                    print('### start of {} ###'.format(ofile))
+                    print(ofile.read())
+                    print('### end of {} ###'.format(ofile))
+
 def add_to_list(_val, _list):
     # convert to string
     value_str = str(_val['values']).strip()
