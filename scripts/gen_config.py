@@ -124,9 +124,11 @@ def gen_config(_dict, ifile):
 
                 # print config file for debugging
                 if os.path.exists(ofile):
+                    f = open(ofile, 'r')
                     print('### start of {} ###'.format(ofile))
-                    print(ofile.read())
+                    print(f.read())
                     print('### end of {} ###'.format(ofile))
+                    f.close()
 
 def add_to_list(_val, _list):
     # convert to string
