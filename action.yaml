@@ -76,15 +76,30 @@ runs:
         sudo apt-get -qq update
         sudo apt-get -qq install tar unzip file gringo
         sudo apt-get -qq install build-essential binutils-dev gfortran
-        sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
+        #sudo apt-get -qq install python3-dev python3-pip python3-boto3 python3-yaml
+        sudo apt-get -qq install python3-dev python3-pip python3-yaml
         sudo apt-get -qq install wget awscli ca-certificates gh libxml2-dev
+        pip3 install --target ~/.local boto3
         pip3 install --target ~/.local botocore
       shell: bash
 
+    # create run directory and download input
+    # no need to check the cache hit since script is able to check the existing files and not download again
+    - name: Download Input Files
+      run: |
+        export PATH=${{ inputs.dependencies_install_dir }}/view/bin:$PATH
+        export PYTHONPATH=~/.local:$PYTHONPATH
+        if [ ! -d "${{ inputs.app_install_dir }}/run" ]; then
+          mkdir ${{ inputs.app_install_dir }}/run
+        fi
+        cd ${{ inputs.app_install_dir }}/run
+        python3 $GITHUB_ACTION_PATH/scripts/get_input.py --ifile ${{ inputs.test_definition }}
+      shell: bash
+
     # used to debug run by allowing ssh connection to GitHub runner
-    - name: Setup tmate session to allow ssh connection
-      uses: mxschmitt/action-tmate@v3
-      #if: $${{ always() && steps.run_application.outcome == 'failure' }}
+    #- name: Setup tmate session to allow ssh connection
+    #  uses: mxschmitt/action-tmate@v3
+    #  if: $${{ always() && steps.run_application.outcome == 'failure' }}
 
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
