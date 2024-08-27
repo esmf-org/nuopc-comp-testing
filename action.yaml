@@ -81,6 +81,11 @@ runs:
         pip3 install --target ~/.local botocore
       shell: bash
 
+    # used to debug run by allowing ssh connection to GitHub runner
+    - name: Setup tmate session to allow ssh connection
+      uses: mxschmitt/action-tmate@v3
+      #if: $${{ always() && steps.run_application.outcome == 'failure' }}
+
     # concretize dependencies
     - name: Concretize Spack Environment Using YAML Specification
       run: |
