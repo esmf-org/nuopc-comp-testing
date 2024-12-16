@@ -77,7 +77,8 @@ runs:
         sudo apt-get -qq install tar unzip file gringo
         sudo apt-get -qq install build-essential binutils-dev gfortran
         sudo apt-get -qq install python3-dev python3-pip python3-yaml
-        sudo apt-get -qq install wget awscli ca-certificates gh libxml2-dev
+        sudo apt-get -qq install wget ca-certificates gh libxml2-dev
+        # sudo apt-get -qq install awscli
         pip3 install --target ~/.local boto3
         pip3 install --target ~/.local botocore
       shell: bash
