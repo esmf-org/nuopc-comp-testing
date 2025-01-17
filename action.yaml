@@ -102,7 +102,7 @@ runs:
 
     # restore dependencies from cache
     - name: Restore Dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ inputs.dependencies_install_dir }} 
         key: spack-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles('**/spack.lock') }}
@@ -168,7 +168,7 @@ runs:
 
     # restore input files from cache
     - name: Restore Input Files From Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ inputs.cache_input_file_list }}
         key: input-
@@ -215,7 +215,7 @@ runs:
 
     # upload model artifacts to check it later
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: ${{ inputs.artifacts_name }}
