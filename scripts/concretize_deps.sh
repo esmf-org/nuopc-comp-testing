@@ -57,15 +57,14 @@ echo "::endgroup::"
 
 # find compilers
 spack compiler find
-cat ~/.spack/linux/compilers.yaml
+cat ~/.spack/packages.yaml
 echo "::endgroup::"
 
 # check given compiler is found or not?
-comp_str=${comp/@/@=}
-if [ -z "$(cat ~/.spack/linux/compilers.yaml | grep $comp_str)" ]; then
+if [ -z "$(cat ~/.spack/packages.yaml | grep $comp)" ]; then
   echo "Given compiler ($comp) not found! Try to find another ..."
-  str=`echo $comp_str | awk -F\@ '{print $1}'`
-  comp_ver=`grep -ir "${str}@=" ~/.spack/linux/compilers.yaml | tr -d "spec: ${str}@=" | sort -n | tail -n 1`
+  str=`echo $comp | awk -F\@ '{print $1}'`
+  comp_ver=`spack compiler list | grep "${str}@" | tr -d "${str}@" | sort -n | tail -n 1`
   comp="${str}@$comp_ver"
   echo "New compiler is found! Using $comp ..."
 else
@@ -84,14 +83,13 @@ echo "  specs:" >> spack.yaml
 IFS=':' read -r -a array <<< "$deps"
 for d in "${array[@]}"
 do
-  echo "  - $d %$comp target=$arch" >> spack.yaml
+  echo "  - $d target=$arch %$comp" >> spack.yaml
 done
 echo "  packages:" >> spack.yaml
 echo "    all:" >> spack.yaml
 # following is required to build same optimized spack for different github action runners
 # spack arch --known-targets command can be used to list known targets
 echo "      target: ['$arch']" >> spack.yaml
-echo "      compiler: [$comp]" >> spack.yaml
 echo "  view: $install_dir/view" >> spack.yaml
 echo "  config:" >> spack.yaml
 echo "    source_cache: $install_dir/source_cache" >> spack.yaml
@@ -105,7 +103,7 @@ echo "::endgroup::"
 
 # find external tools
 echo "::group::Find Externals"
-spack external find
+spack external find --exclude cmake
 echo "::endgroup::"
 
 # create config file (to fix FetchError issue)

@@ -78,7 +78,7 @@ runs:
         sudo apt-get -qq install build-essential binutils-dev gfortran
         sudo apt-get -qq install python3-dev python3-pip python3-yaml
         sudo apt-get -qq install wget ca-certificates gh libxml2-dev
-        # sudo apt-get -qq install awscli
+        sudo apt-get -qq install curl libcurl4-openssl-dev
         pip3 install --target ~/.local boto3
         pip3 install --target ~/.local botocore
       shell: bash
@@ -102,6 +102,7 @@ runs:
 
     # restore dependencies from cache
     - name: Restore Dependencies
+      id: cache-dependencies
       uses: actions/cache@v4
       with:
         path: ${{ inputs.dependencies_install_dir }} 
@@ -111,6 +112,7 @@ runs:
 
     # install dependencies
     - name: Install Dependencies with Spack 
+      if: steps.cache-dependencies.outputs.cache-hit != 'true'
       run: |
         $GITHUB_ACTION_PATH/scripts/install_deps.sh \
           -i "${{ inputs.dependencies_install_dir }}" \
