@@ -64,7 +64,7 @@ echo "::endgroup::"
 if [ -z "$(cat ~/.spack/packages.yaml | grep $comp)" ]; then
   echo "Given compiler ($comp) not found! Try to find another ..."
   str=`echo $comp | awk -F\@ '{print $1}'`
-  comp_ver=`spack compiler list | grep "${str}@" | tr -d "${str}@" | sort -n | tail -n 1`
+  comp_ver=`spack compiler list | grep "${str}@" | tr -d "${str}@" | awk '{print $2}' | sort -n | tail -n 1`
   comp="${str}@$comp_ver"
   echo "New compiler is found! Using $comp ..."
 else
